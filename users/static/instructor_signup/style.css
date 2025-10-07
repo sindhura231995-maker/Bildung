@@ -1,0 +1,165 @@
+/* General Body Styles */
+body {
+  font-family: Arial, sans-serif;
+  background-image: url('https://img.freepik.com/free-photo/still-life-books-versus-technology_23-2150062916.jpg');
+  background-repeat: no-repeat;
+  background-size: cover;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  margin: 0;
+}
+
+/* Main Container */
+.container {
+  max-width: 600px;
+  margin: 40px auto;
+  background: rgba(0, 0, 0, 0.6); /* Transparent overlay for better contrast */
+  border-radius: 10px;
+  box-shadow: 0 5px 15px black;
+  padding: 32px 25px 24px 25px;
+}
+
+/* Header */
+.header {
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.header h1 {
+  color: white;
+  margin: 0;
+}
+
+.header p {
+  color: #e0e0e0;
+  margin-top: 6px;
+  font-size: 0.95rem;
+}
+
+/* Subheadings */
+h2 {
+  text-align: center;
+  margin-bottom: 15px;
+  color: white;
+}
+
+/* Form Layout */
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+}
+
+.row {
+  display: flex;
+  gap: 14px;
+}
+
+.row .form-group {
+  flex: 1;
+}
+
+/* Form Groups */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.form-group label {
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: white;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  padding: 9px;
+  border-radius: 5px;
+  border: 1px solid #d2dbe7;
+  font-size: 15px;
+  margin-bottom: 3px;
+  background: white;
+  transition: border 0.17s;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: #2563eb;
+  outline: none;
+}
+
+/* Toggle Password Eye Icon */
+.toggle-password {
+  position: absolute;
+  right: 12px;
+  top: 36px;
+  cursor: pointer;
+  color: #b1b1b1;
+  font-size: 1.1em;
+  transition: color .18s;
+}
+
+.toggle-password:hover {
+  color: #2563eb;
+}
+
+/* Submit Button */
+.btn {
+  margin-top: 12px;
+  background-color: #2563eb;
+  color: white;
+  font-weight: bold;
+  padding: 12px 0;
+  border: none;
+  border-radius: 5px;
+  font-size: 16px;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: background-color .2s;
+}
+
+.btn:hover {
+  background: #1741a4;
+}
+
+/* Top Buttons (Home / Back) */
+.top-buttons {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  display: flex;
+  gap: 10px;
+  z-index: 1000;
+}
+
+.top-buttons a {
+  text-decoration: none;
+  padding: 10px 18px;
+  background-color: #007bff;
+  color: white;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border-radius: 6px;
+  transition: background-color 0.3s ease;
+}
+
+.top-buttons a:hover {
+  background-color: #0056b3;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .container {
+    max-width: 98vw;
+    padding: 18px 5vw;
+  }
+  .row {
+    flex-direction: column;
+    gap: 0;
+  }
+}

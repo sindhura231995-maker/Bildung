@@ -103,3 +103,6 @@ def admin_dashboard(request):
     if request.user.role != "admin":
         return redirect("auth_page")
     return render(request, "admin/dashboard.html")
+
+def home(request):
+    return render(request, "base.html")  

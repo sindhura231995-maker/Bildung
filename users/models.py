@@ -1,21 +1,40 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.conf import settings
 
 class User(AbstractUser):
-    # Roles: student, instructor, admin
     ROLE_CHOICES = (
         ('student', 'Student'),
         ('instructor', 'Instructor'),
         ('admin', 'Admin'),
     )
-
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='student')
 
-    def __str__(self):
-        return f"{self.username} ({self.role})"
+    # Using email as unique identifier
+    email = models.EmailField(unique=True)
 
-from django.db import models
-from django.conf import settings
+    # Additional fields
+    date_of_birth = models.DateField(null=True, blank=True)
+    GENDER_CHOICE = [
+        ('M', 'Male'),
+        ('F', 'Female'),
+        ('O', 'Other'),
+    ]
+    gender = models.CharField(max_length=1, choices=GENDER_CHOICE, null=True, blank=True)
+    department = models.CharField(max_length=100, blank=True)
+    position = models.CharField(max_length=100, blank=True)
+    experience = models.PositiveIntegerField(null=True, blank=True)
+    bio = models.TextField(blank=True)
+
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
+    
+    def __str__(self):
+        return self.email
+
+
+
+
 """
 class Course(models.Model):
     title = models.CharField(max_length=255)
