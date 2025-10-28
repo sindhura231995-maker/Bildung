@@ -1,3 +1,4 @@
+
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -31,18 +32,25 @@ def browse_courses(request):
         return redirect('login')
 
     available_courses = Course.objects.exclude(students=request.user)
-    return render(request, 'courses/browse_course.html', {'courses': available_courses})
+    return render(request, 'courses/student/browse_course.html', {'courses': available_courses})
 
 
 # -------------------------------
 # Student Views
 # -------------------------------
 
+@login_required(login_url="/auth/")
+def student_dashboard(request):
+    if request.user.role != "student":
+        return redirect("login")
+    enrolled_courses = Course.objects.filter(enrollments__student=request.user)
+    return render(request, "courses/student_dashboard.html", {"enrolled_courses": enrolled_courses})
+
 @login_required(login_url='/login/')
 def enroll_course(request, course_id):
     """Student: enroll in a course"""
     if getattr(request.user, 'role', None) != 'student':
-        return redirect('login')
+        return redirect('student_login')
 
     course = get_object_or_404(Course, id=course_id)
     Enrollment.objects.get_or_create(student=request.user, course=course)
@@ -50,29 +58,43 @@ def enroll_course(request, course_id):
     return redirect('student_dashboard')
 
 
-@login_required(login_url='/login/')
+@login_required(login_url='/student/login/')
 def student_course_detail(request, course_id):
     """Student: view course details + progress"""
-    course = get_object_or_404(Course, id=course_id, students=request.user)
-    for module in course.modules.all():
-      lectures = module.lectures.all()
+    
+    # Get the course if the student is enrolled
+    enrollment = get_object_or_404(Enrollment, course_id=course_id, student=request.user)
+    course = enrollment.course
 
+    # Fetch all lectures in this course
+    lectures = Lecture.objects.filter(module__course=course)
+
+    # Total lectures
     total = lectures.count()
-    completed = LectureProgress.objects.filter(
-        student=request.user, lecture__in=lectures, completed=True
-    ).count()
 
+    # Completed lectures (if no lectures, completed = 0)
+    completed = LectureProgress.objects.filter(
+        student=request.user,
+        lecture__in=lectures,
+        completed=True
+    ).count() if total > 0 else 0
+
+    # Progress map for quick lookup
     progress_map = {
         lp.lecture_id: lp.completed
         for lp in LectureProgress.objects.filter(student=request.user, lecture__in=lectures)
     }
+
+    # Progress percentage
+    progress_percent = int((completed / total * 100) if total else 0)
 
     return render(request, 'courses/student_course_detail.html', {
         'course': course,
         'lectures': lectures,
         'total': total,
         'completed': completed,
-        'progress_map': progress_map
+        'progress_map': progress_map,
+        'progress_percent': progress_percent,
     })
 
 
@@ -80,18 +102,53 @@ def student_course_detail(request, course_id):
 def mark_lecture_complete(request, lecture_id):
     """Student: mark lecture complete"""
     lecture = get_object_or_404(Lecture, id=lecture_id)
-    course = lecture.course
 
+    # ✅ Correct way — Lecture has no 'course', it goes through module.course
+    course = lecture.module.course
+
+    # ✅ Prevent non-students from accessing this
     if getattr(request.user, 'role', None) != 'student':
         return redirect('login')
 
-    LectureProgress.objects.get_or_create(
+    # ✅ Create OR update progress to mark completed
+    LectureProgress.objects.update_or_create(
         student=request.user,
         lecture=lecture,
         defaults={'completed': True}
     )
-    return redirect('student_course_detail', course_id=course.id)
+    return redirect('student:student_course_detail', course_id=lecture.module.course.id)
 
+@login_required(login_url='/student/login/')
+def student_progress(request, course_id):
+    """
+    Student: View overall progress for a course (without individual lectures)
+    """
+    # Ensure the student is enrolled in the course
+    enrollment = get_object_or_404(Enrollment, course_id=course_id, student=request.user)
+    course = enrollment.course
+
+    # Get all lectures for the course
+    lectures = Lecture.objects.filter(module__course=course)
+    total = lectures.count()
+
+    # Count completed lectures
+    completed = LectureProgress.objects.filter(
+        student=request.user,
+        lecture__in=lectures,
+        completed=True
+    ).count() if total > 0 else 0
+
+    # Calculate percentage
+    progress_percent = int((completed / total * 100) if total else 0)
+
+    context = {
+        'course': course,
+        'total': total,
+        'completed': completed,
+        'progress_percent': progress_percent,
+    }
+
+    return render(request, 'courses/student/student_course_progress.html', context)
 
 # -------------------------------
 # Instructor Views
@@ -152,7 +209,7 @@ def course_edit(request, course_id):
     return render(request, 'courses/instructor/course_edit.html', {'form': form, 'course': course})
 
 
-@login_required
+
 def course_detail(request, course_id):
     course = get_object_or_404(Course, id=course_id, instructor=request.user)
     modules = course.modules.all()
@@ -216,12 +273,23 @@ def course_progress_report(request, course_id):
 
     for enrollment in enrollments:
         student = enrollment.student
-        completed = LectureProgress.objects.filter(student=student, lecture__course=course, completed=True).count()
+        completed = LectureProgress.objects.filter(
+            student=student,
+            lecture__module__course=course,  # Fixed this line
+            completed=True
+        ).count()
         progress = (completed / total_lectures * 100) if total_lectures else 0
-        progress_data.append({"student": student, "completed": completed, "total": total_lectures, "progress": progress})
+        progress_data.append({
+            "student": student,
+            "completed": completed,
+            "total": total_lectures,
+            "progress": progress
+        })
 
-    return render(request, 'courses/instructor/course_progress_report.html', {'course': course, 'progress_data': progress_data})
-
+    return render(request, 'courses/instructor/course_progress_report.html', {
+        'course': course,
+        'progress_data': progress_data
+    })
 
 @login_required
 def add_event(request, course_id):
@@ -271,4 +339,4 @@ def student_course_list(request):
     for course in courses:
         course.is_enrolled = course.id in enrolled_ids
 
-    return render(request, 'courses/student/course_list.html', {'courses': courses})
+    return render(request, 'courses/student/student_course_list.html', {'courses': courses})

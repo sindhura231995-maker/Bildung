@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container py-5">
+
+  <!-- Course Progress Header -->
+  <h2 class="fw-bold mb-4 text-primary">{{ course.title }} - Progress</h2>
+
+  <!-- Course Completion Status Card -->
+  <div class="card shadow-sm border-0 mb-4 p-4 rounded-4 text-center
+      {% if progress_percent == 100 %}
+          bg-success text-white
+      {% elif progress_percent >= 50 %}
+          bg-warning text-dark
+      {% else %}
+          bg-danger text-white
+      {% endif %}">
+    <h4 class="fw-bold">Course Completion Status</h4>
+    <p class="mb-2">You have completed <strong>{{ completed }}/{{ total }}</strong> lectures</p>
+    <div class="progress mb-2" style="height: 25px;">
+      <div class="progress-bar bg-light" role="progressbar"
+           style="width: {{ progress_percent }}%;"
+           aria-valuenow="{{ completed }}" aria-valuemin="0" aria-valuemax="{{ total }}">
+        {{ progress_percent }}%
+      </div>
+    </div>
+    {% if progress_percent == 100 %}
+      <p class="fw-bold">🎉 Congratulations! You have completed the course.</p>
+    {% endif %}
+  </div>
+
+  <!-- Upcoming Events -->
+  <div class="card shadow-sm border-0 p-4 rounded-4 mb-4">
+    <h4 class="mb-3 text-secondary">Upcoming Events</h4>
+    {% if course.events.all %}
+      <ul class="list-group">
+        {% for event in course.events.all %}
+          <li class="list-group-item">
+            <strong>{{ event.title }}</strong> <br>
+            {{ event.start_time }} - {{ event.end_time }} <br>
+            {{ event.description }}
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="text-muted">No upcoming events.</p>
+    {% endif %}
+  </div>
+
+  <!-- Back Button -->
+  <div class="text-end">
+    <a href="{% url 'student_dashboard' %}" class="btn btn-outline-primary">Back to Dashboard</a>
+  </div>
+
+</div>
+{% endblock %}

@@ -38,14 +38,14 @@ urlpatterns = [
     path('', home_views.guest_home, name='guest_home'),
 
     # Include all user-related routes (signup, login, dashboards)
-    path("users", include("users.urls")),
+    path("", include("users.urls")),
     path('courses/', include('courses.urls')),
     path('accounts/', include('django.contrib.auth.urls')),  # For password reset and other auth views
     ]
 
 SUBDOMAIN_URLCONFS = {
     'instructor': 'courses.instructor_urls',
-    'student': 'courses.student_urls',  # you'll create later
+    'student': 'courses.student_urls',  
 }
 
 if settings.DEBUG:

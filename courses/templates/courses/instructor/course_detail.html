@@ -31,22 +31,25 @@
   <div id="modulesContainer">
     {% if course.modules.all %}
       {% for module in course.modules.all %}
-        <div class="module border p-3 mb-3 rounded shadow-sm">
-          <h4 class="fw-bold text-primary">Module {{ forloop.counter }}: {{ module.title }}</h4>
-          <p class="text-muted">{{ module.description|default:"No description provided." }}</p>
+        <div class="module mb-4">
+          <h4 class="fw-bold text-primary mb-3">Module {{ forloop.counter }}: {{ module.title }}</h4>
+          <p class="text-muted mb-3">{{ module.description|default:"No description provided." }}</p>
 
-          <div class="lectures">
+          <div class="row g-3">
             {% if module.lectures.all %}
               {% for lecture in module.lectures.all %}
-                <div class="lecture mb-2 p-2 bg-light rounded border">
-                  <strong>Lecture {{ forloop.counter }}: </strong> {{ lecture.title }}
-
-                  {% if lecture.video %}
-                    <video controls width="100%" class="rounded-3 mt-2">
-                      <source src="{{ lecture.video.url }}" type="video/mp4">
-                      Your browser does not support the video tag.
-                    </video>
-                  {% endif %}
+                <div class="col-md-3 col-sm-6">
+                  <div class="card h-100 shadow-sm rounded-4">
+                    {% if lecture.video %}
+                      <video controls width="100%" class="rounded-top">
+                        <source src="{{ lecture.video.url }}" type="video/mp4">
+                        Your browser does not support the video tag.
+                      </video>
+                    {% endif %}
+                    <div class="card-body text-center">
+                      <h6 class="card-title fw-bold mb-0">{{ lecture.title }}</h6>
+                    </div>
+                  </div>
                 </div>
               {% endfor %}
             {% else %}
