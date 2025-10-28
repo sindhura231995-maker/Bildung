@@ -13,8 +13,9 @@
           <div class="card-body">
             <h5 class="card-title">{{ e.course.title }}</h5>
             <p class="card-text">{{ e.course.description|truncatewords:20 }}</p>
-            <a href="{% url 'student_courses:student_course_detail' e.course.id %}" class="btn btn-primary btn-sm">View Details</a>
-            <a href="{% url 'student_courses:mark_lecture_complete' e.course.id %}" class="btn btn-outline-secondary btn-sm">Progress</a>
+            
+            <a href="{% url 'student:student_course_detail' e.course.id %}" class="btn btn-primary btn-sm">View Details</a>
+            <a href="{% url 'student:student_progress' e.course.id %}" class="btn btn-outline-secondary btn-sm">Progress</a>
           </div>
         </div>
       </div>
@@ -22,7 +23,7 @@
   </div>
   {% else %}
   <p>You haven't enrolled in any courses yet.</p>
-  <a href="{% url 'student_courses:browse_courses' %}" class="btn btn-success">Browse Courses</a>
+  <a href="{% url 'student:student_course_list' %}" class="btn btn-success">Browse Courses</a>
   {% endif %}
 </div>
 {% endblock %}
