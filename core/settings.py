@@ -20,6 +20,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',
 
     # Your apps
     'users',
@@ -75,7 +76,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'bildung_db',
         'USER': 'root', # change with your MYSQL username
-        'PASSWORD': '00000', # change with your MYSQL password
+        'PASSWORD': '@Saiteja123', # change with your MYSQL password
         'HOST': 'localhost',
         'PORT': '3306',
         'OPTIONS': {
@@ -120,8 +121,8 @@ ALLOWED_HOSTS = ['.lvh.me', 'lvh.me', '127.0.0.1', 'localhost']
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_URL = "/media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 # ---------------------------------------------------------------------
 # Channels
@@ -131,7 +132,7 @@ CHANNEL_LAYERS = {
     "default": {"BACKEND": "channels.layers.InMemoryChannelLayer"},
 }
 
-# ---------------------------------------------------------------------
+
 # Internationalization
 # ---------------------------------------------------------------------
 LANGUAGE_CODE = 'en-us'
@@ -141,3 +142,19 @@ USE_TZ = True
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_REDIRECT_URL = '/accounts/post-login/'
+SITE_ID = 1
+
+#password_reset_mail local
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+
+
+#password_reset_mail
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'antharisaiteja@gmail.com'
+EMAIL_HOST_PASSWORD ='viybdcfqakmylkus'
+DEFAULT_FROM_EMAIL = 'Bildung Platform <antharisaiteja@gmail.com>'
+

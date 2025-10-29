@@ -1,15 +1,20 @@
 {% extends "base.html" %}
 {% block content %}
-<h2>Available Courses</h2>
-<ul>
-    {% for course in courses %}
-        <li>
-            {{ course.title }} - {{ course.instructor.username }}
-            <a href="{% url 'course_detail' course.id %}">View</a>
+<h2>Search Results for "{{ query }}"</h2>
+
+{% for course in courses %}
+    <div class="card">
+        <h5>{{ course.title }}</h5>
+        <p>{{ course.description }}</p>
+        <a href="{% url 'instructor:course_detail' course.id %}" class="btn btn-primary">View Course</a>
             {% if user.is_authenticated and user.role == 'student' %}
-                <a href="{% url 'enroll_course' course.id %}">Enroll</a>
+                <a href="{% url 'student:enroll_course' course.id %}">Enroll</a>
             {% endif %}
-        </li>
-    {% endfor %}
-</ul>
+
+
+    </div>
+{% empty %}
+    <p>No courses found.</p>
+{% endfor %}
+
 {% endblock %}

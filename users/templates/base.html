@@ -48,9 +48,20 @@
     <!-- Navigation -->
     <nav class="container">
         <a href="/">Home</a>
-        <a href="/student/dashboard/">Student Dashboard</a>
-        <a href="/instructor/dashboard/">Instructor Dashboard</a>
-        <a href="/logout/">Logout</a>
+        <!-- Student Dashboard Link -->
+{% if request.user.is_authenticated and request.user.role == "student" %}
+    <a href="{% url 'student_dashboard' %}">Student Dashboard</a>
+{% else %}
+    <a href="{% url 'student_login' %}">Student Dashboard</a>
+{% endif %}
+        <!-- Instructor Dashboard Link -->
+{% if request.user.is_authenticated and request.user.role == "instructor" %}
+    <a href="{% url 'instructor_dashboard' %}">Instructor Dashboard</a>
+{% else %}
+    <a href="{% url 'instructor_login' %}">Instructor Dashboard</a>
+{% endif %}
+
+        <a href="{% url 'logout_view' %}">Logout</a>
     </nav>
 
     <!-- Main Content -->

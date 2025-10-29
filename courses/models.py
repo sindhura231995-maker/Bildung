@@ -1,41 +1,42 @@
 from django.db import models
 from users.models import User
-
-from django.db import models
 from django.conf import settings
+
 
 class Course(models.Model):
     instructor = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="courses"
     )
     title = models.CharField(max_length=255)
-    slug = models.SlugField(unique=True, blank=True, null=True)  # ✅ new
     description = models.TextField()
-    price = models.DecimalField(max_digits=6, decimal_places=2, default=0.00)
-    cover_image = models.ImageField(upload_to="course_covers/", blank=True, null=True)  # ✅ new
+    price = models.DecimalField(max_digits=8, decimal_places=2, default=0)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    
     # students enrolled
     students = models.ManyToManyField(
         settings.AUTH_USER_MODEL, related_name="enrolled_courses", blank=True
     )
 
+
     def __str__(self):
         return self.title
 
-
-
-class Lecture(models.Model):
-    course = models.ForeignKey(Course, related_name="lectures", on_delete=models.CASCADE)
+class Module(models.Model):
+    course = models.ForeignKey(Course, related_name='modules', on_delete=models.CASCADE)
     title = models.CharField(max_length=255)
-    content = models.TextField(blank=True, null=True)
-    video = models.FileField(upload_to="lectures/videos/", blank=True, null=True)
-    file = models.FileField(upload_to="lectures/files/", blank=True, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    description = models.TextField(blank=True, null=True)
 
     def __str__(self):
-        return f"{self.title} ({self.course.title})"
+        return f"{self.course.title} - {self.title}"
 
+class Lecture(models.Model):
+    module = models.ForeignKey(Module, on_delete=models.CASCADE,  related_name="lectures")
+    title = models.CharField(max_length=255)
+    video = models.FileField(upload_to="lectures/videos/", blank=True, null=True)
+    file = models.FileField(upload_to="lectures/files/", blank=True, null=True)
+    def __str__(self):
+        return f"{self.module.title} - {self.title}"
 
 
 class Enrollment(models.Model):
@@ -50,11 +51,6 @@ class Enrollment(models.Model):
         return f"{self.student.username} -> {self.course.title}"
 
     
-from django.db import models
-from users.models import User
-
-from django.db import models
-from users.models import User
 
 """
 class Progress(models.Model):
@@ -77,9 +73,6 @@ class Progress(models.Model):
         return f"{self.enrollment.student.username} → {self.lecture.title} : {'Done' if self.completed else 'Pending'}"
 """
 
-
-from django.db import models
-from django.conf import settings
 
 class Feedback(models.Model):
     course = models.ForeignKey("Course", on_delete=models.CASCADE, related_name="feedbacks")
@@ -116,3 +109,4 @@ class CourseEvent(models.Model):
 
     def __str__(self):
         return f"{self.course.title} - {self.title} ({self.start_time})"
+

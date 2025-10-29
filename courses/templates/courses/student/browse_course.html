@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+  <h3>Available Courses</h3>
+  <hr>
+  {% if courses %}
+  <div class="row">
+    {% for course in courses %}
+      <div class="col-md-4 mb-3">
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <h5 class="card-title">{{ course.title }}</h5>
+            <p class="card-text">{{ course.description|truncatewords:25 }}</p>
+            <form method="post" action="{% url 'student:enroll_course' course.id %}">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-success btn-sm">Enroll Now</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p>No courses available at the moment.</p>
+  {% endif %}
+</div>
+{% endblock %}

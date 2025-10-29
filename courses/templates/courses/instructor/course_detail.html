@@ -1,27 +1,71 @@
 {% extends "base.html" %}
-{% block content %}
-<h2>{{ course.title }} - Lectures</h2>
-<a href="{% url 'add_lecture' course.id %}" class="btn btn-primary mb-2">Add Lecture</a>
+{% load static %}
 
-<table class="table">
-  <thead>
-    <tr>
-      <th>Title</th>
-      <th>Actions</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for lecture in lectures %}
-      <tr>
-        <td>{{ lecture.title }}</td>
-        <td>
-          <a href="{% url 'edit_lecture' course.id lecture.id %}" class="btn btn-warning btn-sm">Edit</a>
-          <a href="{% url 'delete_lecture' course.id lecture.id %}" class="btn btn-danger btn-sm">Delete</a>
-        </td>
-      </tr>
-    {% empty %}
-      <tr><td colspan="2">No lectures added yet.</td></tr>
-    {% endfor %}
-  </tbody>
-</table>
+{% block content %}
+<div class="container py-5">
+
+  <!-- Course Header -->
+  <h2 class="fw-bold mb-4 text-primary">{{ course.title }}</h2>
+
+  <!-- Course Overview -->
+  <div class="card shadow-sm border-0 mb-4 p-4 rounded-4">
+    <h5 class="mb-3 text-secondary">Course Overview</h5>
+    <div class="row">
+      <div class="col-md-8">
+        <p><strong>Instructor:</strong> {{ course.instructor.get_full_name|default:course.instructor.username }}</p>
+        <p><strong>Price:</strong> ₹{{ course.price }}</p>
+        <p><strong>Description:</strong></p>
+        <p class="text-muted">{{ course.description }}</p>
+      </div>
+      <div class="col-md-4 text-center">
+        {% if course.thumbnail %}
+          <img src="{{ course.thumbnail.url }}" class="img-fluid rounded-4 shadow-sm" alt="{{ course.title }}">
+        {% else %}
+          <img src="{% static 'images/default-course.png' %}" class="img-fluid rounded-4 shadow-sm" alt="No Image">
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Modules & Lectures -->
+  <div id="modulesContainer">
+    {% if course.modules.all %}
+      {% for module in course.modules.all %}
+        <div class="module mb-4">
+          <h4 class="fw-bold text-primary mb-3">Module {{ forloop.counter }}: {{ module.title }}</h4>
+          <p class="text-muted mb-3">{{ module.description|default:"No description provided." }}</p>
+
+          <div class="row g-3">
+            {% if module.lectures.all %}
+              {% for lecture in module.lectures.all %}
+                <div class="col-md-3 col-sm-6">
+                  <div class="card h-100 shadow-sm rounded-4">
+                    {% if lecture.video %}
+                      <video controls width="100%" class="rounded-top">
+                        <source src="{{ lecture.video.url }}" type="video/mp4">
+                        Your browser does not support the video tag.
+                      </video>
+                    {% endif %}
+                    <div class="card-body text-center">
+                      <h6 class="card-title fw-bold mb-0">{{ lecture.title }}</h6>
+                    </div>
+                  </div>
+                </div>
+              {% endfor %}
+            {% else %}
+              <p class="text-muted">No lectures added for this module.</p>
+            {% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <p class="text-muted">No modules added for this course yet.</p>
+    {% endif %}
+  </div>
+
+  <!-- Back Button -->
+  <div class="text-end mt-4">
+    <a href="{% url 'instructor_dashboard' %}" class="btn btn-outline-primary">Back to Courses</a>
+  </div>
+</div>
 {% endblock %}

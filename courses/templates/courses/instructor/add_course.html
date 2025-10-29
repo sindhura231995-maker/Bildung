@@ -1,99 +1,92 @@
 {% extends "base.html" %}
 {% load static %}
+
 {% block content %}
-
 <div class="container py-5">
+  <h2 class="mb-4">Add New Course</h2>
 
-  <h2 class="fw-bold mb-4">Add New Course</h2>
-
-  <form id="courseForm" method="post" enctype="multipart/form-data">
+  <form method="post" enctype="multipart/form-data" id="courseForm">
     {% csrf_token %}
+    {{ course_form.as_p }}
 
-    <!-- Course Info -->
-    <div class="card shadow-sm border-0 mb-4 p-4 rounded-4">
-      <h5 class="mb-3">Course Details</h5>
-      {{ form.as_p }}
-      <div class="mb-3">
-        <label for="numModules" class="form-label">Number of Modules</label>
-        <input type="number" class="form-control" id="numModules" name="numModules" min="1" placeholder="How many modules?">
-      </div>
+    <h3>Modules</h3>
+    <div id="modules">
+      {{ module_formset.management_form }}
+      {% for form in module_formset %}
+        <div class="module" data-module-index="{{ forloop.counter0 }}">
+          <hr>
+          <h4>Module {{ forloop.counter }}</h4>
+          {{ form.as_p }}
+
+          <div class="lectures" data-lecture-index="0"></div>
+          <button type="button" class="add-lecture btn btn-sm btn-info mb-3">Add Lecture</button>
+        </div>
+      {% endfor %}
     </div>
 
-    <!-- Module Blocks -->
-    <div id="modulesContainer" class="mb-4"></div>
-
-    <!-- Add Course Button -->
-    <div class="d-grid">
-      <button type="submit" class="btn btn-primary btn-lg">Add Course</button>
-    </div>
-
+    <button type="button" id="addModule" class="btn btn-primary mb-3">Add Module</button>
+    <br>
+    <button type="submit" class="btn btn-success">Save Course</button>
   </form>
-
 </div>
 
 <script>
-  const numModulesInput = document.getElementById('numModules');
-  const modulesContainer = document.getElementById('modulesContainer');
+  let moduleIndex = parseInt("{{ module_formset.total_form_count|default:0 }}") || 0;
 
-  numModulesInput.addEventListener('change', () => {
-    const num = parseInt(numModulesInput.value) || 0;
-    modulesContainer.innerHTML = '';
+  // Add Module dynamically
+  document.getElementById('addModule').addEventListener('click', function() {
+    const modulesDiv = document.getElementById('modules');
+    const moduleTemplate = `
+      <div class="module" data-module-index="${moduleIndex}">
+        <hr>
+        <h4>Module ${moduleIndex + 1}</h4>
+        <p>
+          <label for="id_modules-${moduleIndex}-title">Title:</label>
+          <input type="text" name="modules-${moduleIndex}-title" id="id_modules-${moduleIndex}-title" required>
+        </p>
+        <p>
+          <label for="id_modules-${moduleIndex}-description">Description:</label>
+          <textarea name="modules-${moduleIndex}-description" id="id_modules-${moduleIndex}-description"></textarea>
+        </p>
 
-    for (let i = 1; i <= num; i++) {
-      const moduleCard = document.createElement('div');
-      moduleCard.className = 'card shadow-sm border-0 mb-3 p-3 rounded-4';
-      moduleCard.innerHTML = `
-        <div class="d-flex justify-content-between align-items-center mb-2">
-          <h6 class="mb-0 fw-bold">Module ${i}</h6>
-          <button type="button" class="btn btn-sm btn-outline-primary toggleModuleBtn">Add Lectures</button>
-        </div>
-        <div class="moduleContent d-none">
-          <div class="lecturesContainer"></div>
-          <button type="button" class="btn btn-sm btn-success addLectureBtn mb-2">+ Add Lecture</button>
-          <button type="button" class="btn btn-outline-secondary saveModuleBtn">Save Module</button>
+        <div class="lectures" data-lecture-index="0"></div>
+        <button type="button" class="add-lecture btn btn-sm btn-info mb-3">Add Lecture</button>
+      </div>
+    `;
+
+    modulesDiv.insertAdjacentHTML('beforeend', moduleTemplate);
+    moduleIndex++;
+
+    // ✅ Update the correct TOTAL_FORMS field
+    const totalForms = document.getElementById('id_modules-TOTAL_FORMS');
+    if (totalForms) totalForms.value = moduleIndex;
+  });
+
+  // Add Lecture dynamically inside each module
+  document.getElementById('modules').addEventListener('click', function(e) {
+    if (e.target && e.target.classList.contains('add-lecture')) {
+      const moduleDiv = e.target.closest('.module');
+      const lecturesDiv = moduleDiv.querySelector('.lectures');
+      const moduleId = moduleDiv.dataset.moduleIndex;
+      let lectureIndex = parseInt(lecturesDiv.dataset.lectureIndex);
+
+      const lectureTemplate = `
+        <div class="lecture mb-2">
+          <p>
+            <label>Lecture Title:</label>
+            <input type="text" name="modules-${moduleId}-lectures-${lectureIndex}-title" required>
+          </p>
+          <p>
+            <label>Lecture Video:</label>
+            <input type="file" name="modules-${moduleId}-lectures-${lectureIndex}-video">
+          </p>
         </div>
       `;
-      modulesContainer.appendChild(moduleCard);
 
-      const toggleBtn = moduleCard.querySelector('.toggleModuleBtn');
-      const moduleContent = moduleCard.querySelector('.moduleContent');
-
-      toggleBtn.addEventListener('click', () => {
-        moduleContent.classList.toggle('d-none');
-      });
-
-      const addLectureBtn = moduleCard.querySelector('.addLectureBtn');
-      const lecturesContainer = moduleCard.querySelector('.lecturesContainer');
-
-      addLectureBtn.addEventListener('click', () => {
-        const lectureIndex = lecturesContainer.children.length + 1;
-        const lectureBlock = document.createElement('div');
-        lectureBlock.className = 'border p-2 mb-2 rounded';
-        lectureBlock.innerHTML = `
-          <div class="mb-2"><strong>Lecture ${lectureIndex}</strong></div>
-          <div class="mb-2">
-            <label class="form-label">Lecture Title</label>
-            <input type="text" name="module_${i}_lecture_${lectureIndex}_title" class="form-control lectureTitle" placeholder="Lecture title">
-          </div>
-          <div class="mb-2">
-            <label class="form-label">Lecture Description</label>
-            <textarea name="module_${i}_lecture_${lectureIndex}_desc" class="form-control lectureDesc" rows="2" placeholder="Short description"></textarea>
-          </div>
-          <div class="mb-2">
-            <label class="form-label">Upload Video</label>
-            <input type="file" name="module_${i}_lecture_${lectureIndex}_video" class="form-control lectureFile">
-          </div>
-        `;
-        lecturesContainer.appendChild(lectureBlock);
-      });
-
-      const saveModuleBtn = moduleCard.querySelector('.saveModuleBtn');
-      saveModuleBtn.addEventListener('click', () => {
-        alert(`Module ${i} saved with ${lecturesContainer.children.length} lectures!`);
-        // optional: save module via AJAX
-      });
+      lecturesDiv.insertAdjacentHTML('beforeend', lectureTemplate);
+      lectureIndex++;
+      lecturesDiv.dataset.lectureIndex = lectureIndex;
     }
   });
 </script>
-
 {% endblock %}

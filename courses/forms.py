@@ -1,28 +1,28 @@
 from django import forms
 from django.utils.text import slugify
-from .models import Course, Lecture, Feedback, Enrollment
+from .models import Course, Lecture, Feedback, Enrollment, Module
+from django.forms import inlineformset_factory
 
 
 class CourseForm(forms.ModelForm):
     class Meta:
         model = Course
-        fields = ['title', 'slug', 'description', 'price', 'cover_image']
-        widgets = {
-            'description': forms.Textarea(attrs={'rows': 4})
-        }
+        fields = ['title', 'description', 'price']
+        widgets = {'description': forms.Textarea(attrs={'rows': 4})}
 
-    def clean_slug(self):
-        slug = self.cleaned_data.get('slug') or slugify(self.cleaned_data.get('title', ''))
-        if Course.objects.filter(slug=slug).exists():
-            raise forms.ValidationError("This slug is already taken. Try another one.")
-        return slug
-
+class ModuleForm(forms.ModelForm):
+    class Meta:
+        model = Module
+        fields = ['title', 'description']
 
 class LectureForm(forms.ModelForm):
     class Meta:
         model = Lecture
-        fields = ['title', 'content', 'video', 'file']
+        fields = ['title', 'video', 'file']
 
+
+ModuleFormSet = inlineformset_factory(Course, Module, form=ModuleForm, extra=1, can_delete=True)
+LectureFormSet = inlineformset_factory(Module, Lecture, form=LectureForm, extra=1, can_delete=True)
 
 class FeedbackForm(forms.ModelForm):
     class Meta:
