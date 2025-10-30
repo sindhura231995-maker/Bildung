@@ -32,7 +32,10 @@ INSTALLED_APPS = [
 
     # Third-party
     'channels',
-    'subdomains',   # ✅ Only this for subdomain routing
+    'subdomains',
+
+    # Added for Google Login
+    'social_django',
 ]
 
 # ---------------------------------------------------------------------
@@ -63,6 +66,10 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+
+                # Added for Google Login
+                'social_django.context_processors.backends',
+                'social_django.context_processors.login_redirect',
             ],
         },
     },
@@ -76,7 +83,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'bildung_db',
         'USER': 'root', # change with your MYSQL username
-        'PASSWORD': '@Saiteja123', # change with your MYSQL password
+        'PASSWORD': ' ', # change with your MYSQL password
         'HOST': 'localhost',
         'PORT': '3306',
         'OPTIONS': {
@@ -100,6 +107,23 @@ AUTH_USER_MODEL = 'users.User'
 LOGIN_URL = '/login/'
 LOGOUT_REDIRECT_URL = '/'
 
+# Added for Google Login
+AUTHENTICATION_BACKENDS = (
+    'social_core.backends.google.GoogleOAuth2',  # Google OAuth
+    'django.contrib.auth.backends.ModelBackend',  # Default
+)
+
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = ' ' # Add your key  here
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = ' '  # Add your client secret here
+SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = ['email', 'profile']
+SOCIAL_AUTH_GOOGLE_OAUTH2_AUTH_EXTRA_ARGUMENTS = {
+    'prompt': 'select_account',
+    'access_type': 'offline',
+}
+
+LOGIN_REDIRECT_URL = '/google-redirect/'  # After Google login redirect
+LOGOUT_REDIRECT_URL = '/'
+
 # ---------------------------------------------------------------------
 # Subdomains
 # ---------------------------------------------------------------------
@@ -112,7 +136,7 @@ SUBDOMAIN_URLCONFS = {
     "instructor": "users.instructor_urls",
 }
 
-PARENT_HOST = "lvh.me"   # ✅ Needed for django-subdomains
+PARENT_HOST = "lvh.me"   # Needed for django-subdomains
 ALLOWED_HOSTS = ['.lvh.me', 'lvh.me', '127.0.0.1', 'localhost']
 
 # ---------------------------------------------------------------------
@@ -132,7 +156,7 @@ CHANNEL_LAYERS = {
     "default": {"BACKEND": "channels.layers.InMemoryChannelLayer"},
 }
 
-
+# ---------------------------------------------------------------------
 # Internationalization
 # ---------------------------------------------------------------------
 LANGUAGE_CODE = 'en-us'
@@ -147,8 +171,6 @@ SITE_ID = 1
 #password_reset_mail local
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
-
-
 #password_reset_mail
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
@@ -157,4 +179,3 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'antharisaiteja@gmail.com'
 EMAIL_HOST_PASSWORD ='viybdcfqakmylkus'
 DEFAULT_FROM_EMAIL = 'Bildung Platform <antharisaiteja@gmail.com>'
-

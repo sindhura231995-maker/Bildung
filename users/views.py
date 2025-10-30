@@ -10,6 +10,8 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.contrib.auth.models import User
 
+# Added for Google OAuth
+from urllib.parse import urlparse, parse_qs
 
 
 def auth_page(request):
@@ -32,16 +34,16 @@ def student_signup(request):
         form = StudentSignUpForm()
 
     return render(request, 'users/student_signup.html', {'form': form})
-# --- Instructor Signup ---
-  
 
+
+# --- Instructor Signup ---
 def instructor_signup(request):
     if request.method == 'POST':
         form = InstructorSignUpForm(request.POST)
         if form.is_valid():
             user = form.save(commit=False)  
             user.role = 'instructor' 
-              # ✅ Hash the password before saving
+            # Hash the password before saving
             raw_password = form.cleaned_data.get("password1") or form.cleaned_data.get("password")
             if raw_password:
                 user.set_password(raw_password)      
@@ -108,7 +110,6 @@ def instructor_dashboard(request):
     return render(request, "users/instructor_dashboard.html", {"courses": courses})
 
 
-
 @login_required(login_url="/auth/")
 def admin_dashboard(request):
     if request.user.role != "admin":
@@ -125,6 +126,8 @@ def post_login_redirect(request):
     if role == 'student':
         return redirect('student_dashboard')   
     return redirect('home') 
+
+
 def signup_view(request):
     """
     Handles user registration and sends a welcome email.
@@ -132,21 +135,16 @@ def signup_view(request):
     'console.EmailBackend' setting in settings.py.
     """
     if request.method == 'POST':
-        # --- 1. SIMULATE FORM PROCESSING AND USER CREATION ---
-        # In a real app, you would validate the form data here.
         username = request.POST.get('username')
         email = request.POST.get('email')
 
-        # Dummy checks for demonstration
         if not username or not email:
             return render(request, 'signup.html', {'error': 'Please fill in both fields.'})
 
         try:
-            # Simulate user creation (replace with actual User.objects.create_user)
             user = User(username=username, email=email)
             user.save()
 
-            # --- 2. SEND WELCOME EMAIL ---
             send_mail(
                 subject="Welcome to Bildung!",
                 message=f"Hi {username}, thanks for signing up!",
@@ -157,3 +155,41 @@ def signup_view(request):
             return render(request, 'signup.html', {'error': str(e)})
 
     return render(request, 'signup.html')
+
+
+# --- Google OAuth Entry (added) ---
+def google_oauth_entry(request):
+    """Capture ?type=student/instructor before sending to Google OAuth."""
+    role = request.GET.get('type', '').strip()
+    next_url = request.GET.get('next', '/google-redirect/').strip()
+
+    if role:
+        request.session['google_role'] = role  # Save role temporarily in session
+
+    redirect_url = f"/social-auth/login/google-oauth2/?next={next_url}&prompt=select_account"
+    return redirect(redirect_url)
+
+
+# --- Google OAuth Redirect (added) ---
+@login_required
+def google_login_redirect(request):
+    """Redirect Google-authenticated users to their appropriate dashboards."""
+    user = request.user
+    role_param = request.GET.get('type') or request.session.get('google_role')
+
+    if role_param:
+        request.session['google_role'] = role_param
+
+        if role_param == 'instructor' and user.role != 'instructor':
+            user.role = 'instructor'
+            user.save()
+        elif role_param == 'student' and user.role != 'student':
+            user.role = 'student'
+            user.save()
+
+    if user.role == 'instructor':
+        return redirect('instructor_dashboard')
+    elif user.role == 'student':
+        return redirect('student_dashboard')
+    else:
+        return redirect('home')

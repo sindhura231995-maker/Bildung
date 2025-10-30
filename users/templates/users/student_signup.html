@@ -68,6 +68,16 @@
             <button type="submit" class="btn btn-success w-100">Sign Up</button>
           </form>
 
+          <!-- Added Google Signup Button (Only Change) -->
+          <div class="text-center my-3">
+            <span class="text-muted">Or sign up with</span>
+            <hr class="mt-2 mb-3">
+            <a href="{% url 'google_oauth_entry' %}?type=student" class="btn btn-outline-danger w-100">
+              <i class="fab fa-google"></i> Continue with Google
+            </a>
+          </div>
+          <!-- End Google Signup Section -->
+
           <p class="mt-3">Already have an account? 
             <a href="{% url 'student_login' %}">Student Login</a>
           </p>
