@@ -51,11 +51,11 @@
                 {% if user.role == "student" %}
                     <a href="{% url 'student_dashboard' %}" class="btn btn-outline-success me-2">Dashboard</a>
                 {% elif user.role == "instructor" %}
-                    <a href="{% url 'instructor_dashboard' %}" class="btn btn-outline-success me-2">Dashboard</a>
+                    <a href="{% url 'instructor:instructor_dashboard' %}" class="btn btn-outline-success me-2">Dashboard</a>
                 {% elif user.role == "admin" %}
                     <a href="{% url 'admin_dashboard' %}" class="btn btn-outline-success me-2">Admin</a>
                 {% endif %}
-                <a href="{% url 'logout_view' %}" class="btn btn-danger">Logout</a>
+                <a href="{% url 'logout' %}" class="btn btn-danger">Logout</a>
             {% else %}
                 <a href="{% url 'student_login' %}" class="btn btn-outline-primary me-2">Student Login</a>
                 <a href="{% url 'instructor_login' %}" class="btn btn-outline-secondary me-2">Instructor Login</a>
@@ -70,24 +70,140 @@
         <h1>Learn Anything, Anytime, Anywhere</h1>
         <p>Join thousands of learners and instructors on Bildung.</p>
         <div class="search-bar mt-4">
-  <form method="get" action="{% url 'courses:course_list' %}">
-    <input type="text" class="form-control d-inline-block" name="q" placeholder="Search for courses..." required>
-    <button type="submit" class="btn btn-warning mt-3">Search</button>
-</form>
-
+            <form method="get" action="{% url 'courses:course_list' %}">
+                <input type="text" class="form-control d-inline-block" name="q" placeholder="Search for courses...">
+                <button type="submit" class="btn btn-warning mt-3">Search</button>
+            </form>
         </div>
     </section>
 
     <!-- Categories -->
     <section class="container my-5">
-        <h2 class="mb-4">Popular Categories</h2>
-        <div class="row text-center">
-            <div class="col-md-3 mb-3"><div class="p-3 border rounded">Programming</div></div>
-            <div class="col-md-3 mb-3"><div class="p-3 border rounded">Business</div></div>
-            <div class="col-md-3 mb-3"><div class="p-3 border rounded">Design</div></div>
-            <div class="col-md-3 mb-3"><div class="p-3 border rounded">Music</div></div>
+      <h2 class="mb-4">Popular Categories</h2>
+      <div class="row text-center">
+
+        <!-- Programming -->
+        <div class="col-md-3 mb-3">
+          <button class="btn btn-outline-primary w-100 py-3 rounded-3" data-bs-toggle="modal" data-bs-target="#programmingModal">
+            Programming
+          </button>
         </div>
+
+        <!-- Business -->
+        <div class="col-md-3 mb-3">
+          <button class="btn btn-outline-success w-100 py-3 rounded-3" data-bs-toggle="modal" data-bs-target="#businessModal">
+            Business
+          </button>
+        </div>
+
+        <!-- Design -->
+        <div class="col-md-3 mb-3">
+          <button class="btn btn-outline-warning w-100 py-3 rounded-3" data-bs-toggle="modal" data-bs-target="#designModal">
+            Design
+          </button>
+        </div>
+
+        <!-- Music -->
+        <div class="col-md-3 mb-3">
+          <button class="btn btn-outline-danger w-100 py-3 rounded-3" data-bs-toggle="modal" data-bs-target="#musicModal">
+            Music
+          </button>
+        </div>
+
+      </div>
     </section>
+
+    <!-- Programming Modal -->
+    <div class="modal fade" id="programmingModal" tabindex="-1" aria-labelledby="programmingModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4">
+          <div class="modal-header bg-primary text-white rounded-top-4">
+            <h5 class="modal-title" id="programmingModalLabel">Programming Languages</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body text-center">
+            <div class="d-grid gap-2">
+              <button class="btn btn-outline-dark subcat-btn">C</button>
+              <button class="btn btn-outline-dark subcat-btn">C++</button>
+              <button class="btn btn-outline-dark subcat-btn">Java</button>
+              <button class="btn btn-outline-dark subcat-btn">Python</button>
+              <button class="btn btn-outline-dark subcat-btn">PHP</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Business Modal -->
+    <div class="modal fade" id="businessModal" tabindex="-1" aria-labelledby="businessModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4">
+          <div class="modal-header bg-success text-white rounded-top-4">
+            <h5 class="modal-title" id="businessModalLabel">Business Programs</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body text-center">
+            <div class="d-grid gap-2">
+              <button class="btn btn-outline-dark subcat-btn">Bachelor of Management Studies (BMS)</button>
+              <button class="btn btn-outline-dark subcat-btn">Bachelor of Business Management (BBM)</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Design Modal -->
+    <div class="modal fade" id="designModal" tabindex="-1" aria-labelledby="designModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4">
+          <div class="modal-header bg-warning text-dark rounded-top-4">
+            <h5 class="modal-title" id="designModalLabel">Design Courses</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body text-center">
+            <div class="d-grid gap-2">
+              <button class="btn btn-outline-dark subcat-btn">Graphic Design</button>
+              <button class="btn btn-outline-dark subcat-btn">Fashion Design</button>
+              <button class="btn btn-outline-dark subcat-btn">Interior Design</button>
+              <button class="btn btn-outline-dark subcat-btn">Product Design</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Music Modal -->
+    <div class="modal fade" id="musicModal" tabindex="-1" aria-labelledby="musicModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4">
+          <div class="modal-header bg-danger text-white rounded-top-4">
+            <h5 class="modal-title" id="musicModalLabel">Music Programs</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body text-center">
+            <div class="d-grid gap-2">
+              <button class="btn btn-outline-dark subcat-btn">B.A. in Music Technology</button>
+              <button class="btn btn-outline-dark subcat-btn">B.A. in Music Production and Composition</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+      // Handle subcategory clicks for all modals
+      document.querySelectorAll('.subcat-btn').forEach(button => {
+        button.addEventListener('click', () => {
+          const subcat = button.textContent.trim();
+          alert(`You selected ${subcat}!`);
+          // Optional redirect:
+          // window.location.href = `/courses/${subcat.toLowerCase().replace(/\s+/g, '-')}/`;
+        });
+      });
+    </script>
 
     <!-- Featured Courses -->
     <section class="container my-5">
@@ -100,7 +216,7 @@
                         <h5 class="card-title">{{ course.title }}</h5>
                         <p class="card-text">{{ course.description|truncatewords:15 }}</p>
                         <p class="fw-bold">Price: ${{ course.price }}</p>
-                        <a href="{% url 'instructor:course_detail' course.id %}" class="btn btn-outline-primary">View Course</a>
+                        <a href="#" class="btn btn-outline-primary">View Course</a>
                     </div>
                 </div>
             </div>

@@ -7,62 +7,77 @@
 
   <form method="post" enctype="multipart/form-data" id="courseForm">
     {% csrf_token %}
-    {{ course_form.as_p }}
 
+    <!-- Course Details Section -->
+    <div class="card shadow-sm border-0 mb-4 p-4 rounded-4">
+      <h5 class="mb-3">Course Details</h5>
+      {{ course_form.as_p }}
+
+      <!--  Category Dropdown (Alphabetical Order) -->
+      <div class="mb-3">
+        <label for="category" class="form-label">Category</label>
+        <select id="category" name="category" class="form-select" required>
+          <option value="" selected disabled>Select a category</option>
+          <option value="business">Business</option>
+          <option value="design">Design</option>
+          <option value="music">Music</option>
+          <option value="programming">Programming</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Modules Section -->
     <h3>Modules</h3>
     <div id="modules">
       {{ module_formset.management_form }}
       {% for form in module_formset %}
-        <div class="module" data-module-index="{{ forloop.counter0 }}">
-          <hr>
-          <h4>Module {{ forloop.counter }}</h4>
+        <div class="module card p-3 mb-4 shadow-sm rounded-4" data-module-index="{{ forloop.counter0 }}">
+          <h5>Module {{ forloop.counter }}</h5>
           {{ form.as_p }}
 
           <div class="lectures" data-lecture-index="0"></div>
-          <button type="button" class="add-lecture btn btn-sm btn-info mb-3">Add Lecture</button>
+          <button type="button" class="add-lecture btn btn-sm btn-info mt-2">+ Add Lecture</button>
         </div>
       {% endfor %}
     </div>
 
-    <button type="button" id="addModule" class="btn btn-primary mb-3">Add Module</button>
+    <button type="button" id="addModule" class="btn btn-primary mb-3">+ Add Module</button>
     <br>
-    <button type="submit" class="btn btn-success">Save Course</button>
+    <button type="submit" class="btn btn-success btn-lg">Save Course</button>
   </form>
 </div>
 
 <script>
   let moduleIndex = parseInt("{{ module_formset.total_form_count|default:0 }}") || 0;
 
-  // Add Module dynamically
+  //  Add Module dynamically
   document.getElementById('addModule').addEventListener('click', function() {
     const modulesDiv = document.getElementById('modules');
     const moduleTemplate = `
-      <div class="module" data-module-index="${moduleIndex}">
-        <hr>
-        <h4>Module ${moduleIndex + 1}</h4>
+      <div class="module card p-3 mb-4 shadow-sm rounded-4" data-module-index="${moduleIndex}">
+        <h5>Module ${moduleIndex + 1}</h5>
         <p>
           <label for="id_modules-${moduleIndex}-title">Title:</label>
-          <input type="text" name="modules-${moduleIndex}-title" id="id_modules-${moduleIndex}-title" required>
+          <input type="text" name="modules-${moduleIndex}-title" id="id_modules-${moduleIndex}-title" class="form-control" required>
         </p>
         <p>
           <label for="id_modules-${moduleIndex}-description">Description:</label>
-          <textarea name="modules-${moduleIndex}-description" id="id_modules-${moduleIndex}-description"></textarea>
+          <textarea name="modules-${moduleIndex}-description" id="id_modules-${moduleIndex}-description" class="form-control"></textarea>
         </p>
 
         <div class="lectures" data-lecture-index="0"></div>
-        <button type="button" class="add-lecture btn btn-sm btn-info mb-3">Add Lecture</button>
+        <button type="button" class="add-lecture btn btn-sm btn-info mt-2">+ Add Lecture</button>
       </div>
     `;
-
     modulesDiv.insertAdjacentHTML('beforeend', moduleTemplate);
     moduleIndex++;
 
-    // ✅ Update the correct TOTAL_FORMS field
+    // Update the TOTAL_FORMS hidden field
     const totalForms = document.getElementById('id_modules-TOTAL_FORMS');
     if (totalForms) totalForms.value = moduleIndex;
   });
 
-  // Add Lecture dynamically inside each module
+  //  Add Lecture dynamically inside each module
   document.getElementById('modules').addEventListener('click', function(e) {
     if (e.target && e.target.classList.contains('add-lecture')) {
       const moduleDiv = e.target.closest('.module');
@@ -71,14 +86,14 @@
       let lectureIndex = parseInt(lecturesDiv.dataset.lectureIndex);
 
       const lectureTemplate = `
-        <div class="lecture mb-2">
+        <div class="lecture border p-3 mb-3 rounded">
           <p>
             <label>Lecture Title:</label>
-            <input type="text" name="modules-${moduleId}-lectures-${lectureIndex}-title" required>
+            <input type="text" name="modules-${moduleId}-lectures-${lectureIndex}-title" class="form-control" required>
           </p>
           <p>
             <label>Lecture Video:</label>
-            <input type="file" name="modules-${moduleId}-lectures-${lectureIndex}-video">
+            <input type="file" name="modules-${moduleId}-lectures-${lectureIndex}-video" class="form-control">
           </p>
         </div>
       `;
