@@ -4,10 +4,8 @@
 {% block content %}
 <div class="container py-5">
 
-  <!-- Course Progress Header -->
   <h2 class="fw-bold mb-4 text-primary">{{ course.title }} - Progress</h2>
 
-  <!-- Course Completion Status Card -->
   <div class="card shadow-sm border-0 mb-4 p-4 rounded-4 text-center
       {% if progress_percent == 100 %}
           bg-success text-white

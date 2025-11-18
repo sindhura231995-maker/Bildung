@@ -14,24 +14,39 @@
     <a href="{% url 'instructor:instructor_dashboard' %}" class="btn btn-outline-primary btn-sm">← Back to Dashboard</a>
   </div>
 
-  {% if students %}
+  {% if students_data %}
   <div class="row g-4">
-    {% for student in students %}
+    {% for s in students_data %}
     <div class="col-md-4">
       <div class="card shadow-sm border-0 rounded-4">
         <div class="card-body">
           <h5 class="fw-bold mb-1">
-         <a href="{% url 'instructor:view_student_profile' student.id %}" class="text-decoration-none text-dark">
-              {{ student.get_full_name|default:student.username }}
-                   </a></h5>
-          <p class="text-muted small mb-2">{{ student.email }}</p>
+            <a href="{% url 'instructor:view_student_profile' s.student.id %}" class="text-decoration-none text-dark">
+              {{ s.student.get_full_name|default:s.student.username }}
+            </a>
+          </h5>
+          <p class="text-muted small mb-2">{{ s.student.email }}</p>
           <hr>
           <h6 class="text-muted small mb-2">Enrolled Courses:</h6>
+
           <ul class="list-unstyled small">
-            {% for enrollment in enrollments %}
-              {% if enrollment.student == student %}
-                <li>🎓 {{ enrollment.course.title }}</li>
-              {% endif %}
+            {% for course in s.courses %}
+              <li class="mb-3">
+                🎓 <strong>{{ course.title }}</strong>
+                <div class="mt-1">
+                  <div class="progress" style="height: 8px; border-radius: 5px;">
+                    <div class="progress-bar 
+                      {% if course.progress == 100 %}bg-success
+                      {% elif course.progress >= 50 %}bg-info
+                      {% else %}bg-warning{% endif %}"
+                      style="width: {{ course.progress }}%">
+                    </div>
+                  </div>
+                  <small class="text-muted">{{ course.progress }}% complete</small>
+                </div>
+              </li>
+            {% empty %}
+              <li class="text-muted">No courses enrolled</li>
             {% endfor %}
           </ul>
         </div>

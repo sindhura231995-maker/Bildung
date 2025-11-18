@@ -3,36 +3,49 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>My Profile</title>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<title>My profile</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+    footer { background: #f8f9fa; padding: 20px 0; text-align: center; margin-top: 50px; }
+</style>
 </head>
-
 <body class="bg-light">
 
-<!-- ✅ Top Navigation -->
+<!-- ✅ Top Navbar -->
 <div class="d-flex justify-content-between align-items-center p-3 bg-white shadow-sm">
-    <h3 class="m-0 fw-bold">Bildung</h3>
-    <div class="d-flex align-items-center gap-3">
-        <h4 class="m-0">Hello, {{ user.first_name }} {{ user.last_name }}</h4>
+    <!-- Bildung clickable logo -->
+    <a href="{% url 'student_dashboard' %}" class="text-decoration-none text-dark">
+        <h3 class="m-0 fw-bold">Bildung</h3>
+    </a>
 
+    <div class="d-flex align-items-center gap-3">
+        <h4 class="m-0">Hello, {{ user.first_name }} {{ user.last_name }} </h4>
         <div class="dropdown">
-            <button class="btn rounded-circle shadow" style="background:gray;color:white;width:45px;height:45px;" 
-                type="button" data-bs-toggle="dropdown">
+            <button class="btn rounded-circle shadow" style="background:gray;color:white;width:45px;height:45px;" type="button" data-bs-toggle="dropdown">
                 {{ request.user.username|first|upper }}
             </button>
             <ul class="dropdown-menu dropdown-menu-end">
                 <li><a class="dropdown-item" href="{% url 'profile_view' %}">Profile</a></li>
                 <li><a class="dropdown-item" href="{% url 'student:my_courses' %}">My Courses</a></li>
+                <li><a class="dropdown-item" href="{% url 'student:student_upcoming_classes' %}">Upcoming Classes</a></li>
+                <li><a class="dropdown-item" href="{% url 'student:my_certificates' %}">My Certificates</a></li>
+                <li><a class="dropdown-item" href="#">Notifications</a></li>
+                <li><a class="dropdown-item" href="#">Payments</a></li>
+                <li><a class="dropdown-item" href="#">Help and Support</a></li>
+                <li><a class="dropdown-item" href="#">Feedback</a></li>
+                <li><a class="dropdown-item" href="#">Account Settings</a></li>
                 <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item text-danger" href="{% url 'student_dashboard' %}">Home</a></li>
+                <!-- 🗑 Removed “Home” option -->
                 <li><a class="dropdown-item text-danger" href="{% url 'logout_view' %}">Logout</a></li>
             </ul>
         </div>
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
 <div class="container mt-4">
-    <div class="card p-4 shadow">
+    
         <h2 class="mb-4 text-center">
     {% if is_editing %}
         ✏️ Edit My Profile
@@ -137,15 +150,6 @@
                        <a href="{% url 'profile_edit' %}" class="btn btn-primary">Edit Profile</a>
                      </div>
                     {% endif %}
-                    {% if is_instructor_view %}
-                        <a href="{% url 'instructor:instructor_dashboard' %}" class="btn btn-outline-primary">
-                               ← Back to Dashboard
-                        </a>
-                    {% else %}
-                           <a href="{% url 'student_dashboard' %}" class="btn btn-primary">
-                                  Go to Dashboard
-                         </a>
-                    {% endif %}
 
                 {% endif %}
             </div>
@@ -155,5 +159,9 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<footer>
+    <p>&copy; 2025 Bildung. All rights reserved.</p>
+</footer>
 </body>
 </html>
+

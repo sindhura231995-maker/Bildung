@@ -10,6 +10,7 @@ from django.core.mail import send_mail
 from django.conf import settings
 # Added for Google OAuth
 from urllib.parse import urlparse, parse_qs
+from django.contrib.auth.backends import ModelBackend
 
 
 def auth_page(request):
@@ -17,20 +18,19 @@ def auth_page(request):
 
 
 # --- Student Signup ---
+
 def student_signup(request):
     if request.method == 'POST':
         form = StudentSignUpForm(request.POST)
         if form.is_valid():
-            user = form.save() 
-            user.role = 'student'             
-            login(request, user)            # Log them in
+            user = form.save()
+            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
             messages.success(request, f"Welcome {user.first_name}! Your account has been created.")
-            return redirect('student_dashboard')  # URL name in courses/urls.py
+            return redirect('student_dashboard')
         else:
             messages.error(request, "Please correct the errors below.")
     else:
         form = StudentSignUpForm()
-
     return render(request, 'users/student_signup.html', {'form': form})
 # --- Instructor Signup ---
   
@@ -39,18 +39,21 @@ def instructor_signup(request):
     if request.method == 'POST':
         form = InstructorSignUpForm(request.POST)
         if form.is_valid():
-            user = form.save(commit=False)  
-            user.role = 'instructor' 
-              # ✅ Hash the password before saving
+            user = form.save(commit=False)
+            user.role = 'instructor'
+
             raw_password = form.cleaned_data.get("password1") or form.cleaned_data.get("password")
             if raw_password:
-                user.set_password(raw_password)      
-            user.save()                     
-            login(request, user)
+                user.set_password(raw_password)
+            user.save()
+
+            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
             return redirect("instructor:instructor_dashboard")
     else:
         form = InstructorSignUpForm()
+
     return render(request, 'users/instructor_signup.html', {'form': form})
+
 
 
 # --- Student Login ---

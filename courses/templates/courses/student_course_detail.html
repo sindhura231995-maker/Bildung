@@ -1,7 +1,46 @@
-{% extends "base.html" %}
 {% load static %}
 
-{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bildung</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+</head>
+<body class="bg-light">
+
+
+<div class="d-flex justify-content-between align-items-center p-3 bg-white shadow-sm">
+  
+    <a href="{% url 'student_dashboard' %}" class="text-decoration-none text-dark">
+        <h3 class="m-0 fw-bold">Bildung</h3>
+    </a>
+
+    <div class="d-flex align-items-center gap-3">
+        <h4 class="m-0">Hello, {{ user.first_name }} {{ user.last_name }} </h4>
+        <div class="dropdown">
+            <button class="btn rounded-circle shadow" style="background:gray;color:white;width:45px;height:45px;" type="button" data-bs-toggle="dropdown">
+                {{ request.user.username|first|upper }}
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" href="{% url 'profile_view' %}">Profile</a></li>
+                <li><a class="dropdown-item" href="{% url 'student:my_courses' %}">My Courses</a></li>
+                <li><a class="dropdown-item" href="{% url 'student:student_upcoming_classes' %}">Upcoming Classes</a></li>
+                <li><a class="dropdown-item" href="{% url 'student:my_certificates' %}">My Certificates</a></li>
+                <li><a class="dropdown-item" href="#">Notifications</a></li>
+                <li><a class="dropdown-item" href="#">Payments</a></li>
+                <li><a class="dropdown-item" href="#">Help and Support</a></li>
+                <li><a class="dropdown-item" href="#">Feedback</a></li>
+                <li><a class="dropdown-item" href="#">Account Settings</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item text-danger" href="{% url 'logout_view' %}">Logout</a></li>
+            </ul>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <div class="container py-5">
 
   <!-- Course Header -->
@@ -26,12 +65,44 @@
     </div>
   </div>
 
-  <!-- Modules & Lectures -->
-  <div id="modulesContainer">
-    {% if course.modules.all %}
-      {% for module in course.modules.all %}
+  <!-- ✅ Course Progress Section -->
+  <div class="card shadow-sm border-0 mb-4 p-4 rounded-4" id="course-progress-card">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <h5 class="mb-0 text-secondary fw-semibold">Your Progress</h5>
+      <span class="text-muted small" id="progress-text">
+        {{ completed }} / {{ total }} lectures completed ({{ progress_percent }}%)
+      </span>
+    </div>
+
+    <div class="progress" style="height: 15px; border-radius: 10px; overflow: hidden;">
+      <div id="progress-bar" class="progress-bar bg-success progress-bar-striped progress-bar-animated"
+           role="progressbar"
+           style="width: {{ progress_percent }}%;"
+           aria-valuenow="{{ progress_percent }}" aria-valuemin="0" aria-valuemax="100">
+        {{ progress_percent }}%
+      </div>
+    </div>
+
+    {% if progress_percent == 100 %}
+    <div class="text-center mt-4">
+      <a href="{% url 'student:get_certificate' course.id %}" class="btn btn-success btn-lg shadow-sm">
+        🎓 Get Certificate
+      </a>
+    </div>
+    {% endif %}
+  </div>
+
+<!-- 🔒 Modules & Lectures -->
+<div id="modulesContainer">
+  {% if modules %}
+    {% for module in modules %}
+      {% if module.id in unlocked_modules %}
+        {% comment %} ✅ Module is unlocked {% endcomment %}
         <div class="module mb-4">
-          <h4 class="fw-bold text-primary mb-3">Module {{ forloop.counter }}: {{ module.title }}</h4>
+          <h4 class="fw-bold text-primary mb-3">
+            Module {{ forloop.counter }}: {{ module.title }}
+            <span class="badge bg-success ms-2">✅ Unlocked</span>
+          </h4>
           <p class="text-muted mb-3">{{ module.description|default:"No description provided." }}</p>
 
           <div class="row g-3">
@@ -40,7 +111,7 @@
                 <div class="col-md-3 col-sm-6">
                   <div class="card h-100 shadow-sm rounded-4">
                     {% if lecture.video %}
-                      <video controls width="100%" class="rounded-top">
+                      <video id="video-{{ lecture.id }}" width="100%" controls class="rounded-top">
                         <source src="{{ lecture.video.url }}" type="video/mp4">
                         Your browser does not support the video tag.
                       </video>
@@ -49,10 +120,15 @@
                       <h6 class="card-title fw-bold mb-2">{{ lecture.title }}</h6>
                       <div class="mt-auto text-center">
                         {% if lecture.id in progress_map %}
-                          <span class="badge bg-success">✅ Completed</span>
+                         <a href="{% url 'student:undo_lecture_completion' lecture.id %}" class="btn btn-outline-danger btn-sm">
+                           ↩ Undo Completion
+                         </a>
                         {% else %}
-                          <a href="{% url 'student:mark_lecture_complete' lecture.id %}" class="btn btn-outline-primary btn-sm">Mark as Complete</a>
+                         <a href="{% url 'student:mark_lecture_complete' lecture.id %}" class="btn btn-outline-primary btn-sm">
+                                 ✅ Mark as Complete
+                        </a>
                         {% endif %}
+
                       </div>
                     </div>
                   </div>
@@ -63,32 +139,132 @@
             {% endif %}
           </div>
         </div>
-      {% endfor %}
-    {% else %}
-      <p class="text-muted">No modules added for this course yet.</p>
-    {% endif %}
-  </div>
 
-  <!-- Upcoming Events -->
-  <div class="mt-4">
-    <h4>Upcoming Events</h4>
-    <ul>
-      {% for event in course.events.all %}
-        <li>
-          <strong>{{ event.title }}</strong> <br>
-          {{ event.start_time }} - {{ event.end_time }} <br>
-          {{ event.description }}
-        </li>
-      {% empty %}
-        <li>No upcoming events</li>
-      {% endfor %}
-    </ul>
-  </div>
+      {% else %}
+        {% comment %} 🔒 Module is locked {% endcomment %}
+        <div class="module mb-4 locked-module">
+          <h4 class="fw-bold text-primary mb-3">
+            Module {{ forloop.counter }}: {{ module.title }}
+            <span class="badge bg-danger ms-2">🔒 Locked</span>
+          </h4>
+          <p class="text-muted mb-3">{{ module.description|default:"No description provided." }}</p>
 
-  <!-- Back Button -->
-  <div class="text-end mt-4">
-    <a href="{% url 'student_dashboard' %}" class="btn btn-outline-primary">Back to Dashboard</a>
-  </div>
-
+          <div class="row g-3">
+            {% if module.lectures.all %}
+              {% for lecture in module.lectures.all %}
+                <div class="col-md-3 col-sm-6">
+                  <div class="card h-100 shadow-sm rounded-4 position-relative">
+                    <div class="locked-overlay d-flex flex-column justify-content-center align-items-center text-white">
+                      <span class="fs-4">🔒</span>
+                      <small>Complete previous module to unlock</small>
+                    </div>
+                    {% if lecture.video %}
+                      <video id="video-{{ lecture.id }}" width="100%" class="rounded-top" muted>
+                        <source src="{{ lecture.video.url }}" type="video/mp4">
+                        Your browser does not support the video tag.
+                      </video>
+                    {% endif %}
+                    <div class="card-body">
+                      <h6 class="card-title fw-bold mb-2">{{ lecture.title }}</h6>
+                    </div>
+                  </div>
+                </div>
+              {% endfor %}
+            {% else %}
+              <p class="text-muted">No lectures added for this module.</p>
+            {% endif %}
+          </div>
+        </div>
+      {% endif %}
+    {% endfor %}
+  {% else %}
+    <p class="text-muted">No modules added for this course yet.</p>
+  {% endif %}
 </div>
-{% endblock %}
+
+<style>
+  .locked-module {
+    opacity: 0.6;
+    position: relative;
+  }
+  .locked-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: 1rem;
+    text-align: center;
+    z-index: 10;
+  }
+  footer { background: #f8f9fa; padding: 20px 0; text-align: center; margin-top: 50px; }
+</style>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const videos = document.querySelectorAll("video");
+
+  videos.forEach(video => {
+    const lectureId = video.id.split("-")[1];
+    const cardBody = video.closest(".card").querySelector(".card-body");
+
+    // When the video finishes playing
+    video.addEventListener("ended", function () {
+      const duration = video.duration;
+      const watchedTime = duration; // since ended event fires at full playback
+
+      fetch(`/student/lecture/${lectureId}/auto_complete/`, {
+        method: "POST",
+        headers: {
+          "X-CSRFToken": getCookie("csrftoken"),
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({
+          watched_time: watchedTime,
+          duration: duration,
+        }),
+      })
+        .then(response => response.json())
+        .then(data => {
+          console.log(data.message);
+
+          // ✅ Replace Mark Complete button with "Completed" badge instantly
+          const btnContainer = cardBody.querySelector(".mt-auto");
+          if (btnContainer) {
+            btnContainer.innerHTML = `<span class="badge bg-success">✅ Completed</span>`;
+          }
+
+          // ✅ Update progress bar and text
+          const progressBar = document.getElementById("progress-bar");
+          const progressText = document.getElementById("progress-text");
+
+          if (progressBar && progressText) {
+            progressBar.style.width = `${data.progress_percent}%`;
+            progressBar.textContent = `${data.progress_percent}%`;
+            progressText.textContent = `${data.completed} / ${data.total} lectures completed (${data.progress_percent}%)`;
+          }
+        })
+        .catch(err => console.error("Auto-mark failed:", err));
+    });
+  });
+
+  // Helper: get CSRF token for Django POST
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== "") {
+      const cookies = document.cookie.split(";");
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === name + "=") {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+});
+</script>
+
+<footer>
+    <p>&copy; 2025 Bildung. All rights reserved.</p>
+</footer>
+</body>
+</html>

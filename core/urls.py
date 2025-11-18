@@ -35,9 +35,7 @@ urlpatterns = [
     path("chat/", include("chat.urls")),
 
     # Main site root
-   # path('', home_views.smart_home, name='smart_home'),
-
-    path('', course_views.smart_home, name='smart_home'),
+   path('', home_views.smart_home, name='smart_home'),
     
     # Include all user-related routes (signup, login, dashboards)
     path("", include("users.urls")),

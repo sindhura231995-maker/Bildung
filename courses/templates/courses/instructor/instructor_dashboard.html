@@ -8,9 +8,10 @@
 
 </head>
 <body class="bg-light">
-<div class="d-flex justify-content-between align-items-center p-3 bg-white shadow-sm">
-    <h3 class="m-0 fw-bold">Bildung</h3>
-     
+  <div class="d-flex justify-content-between align-items-center p-3 bg-white shadow-sm">
+    <a href="{% url 'instructor:instructor_dashboard' %}" class="text-decoration-none text-dark">
+        <h3 class="m-0 fw-bold">Bildung</h3>
+    </a>  
 
         <div class="dropdown">
             <button class="btn rounded-circle shadow" style="background:gray;color:white;width:45px;height:45px;" type="button" data-bs-toggle="dropdown">
@@ -19,13 +20,12 @@
             <ul class="dropdown-menu dropdown-menu-end">
                 <li><a class="dropdown-item" href="{% url 'profile_view' %}">Profile</a></li>
                 <li><a class="dropdown-item" href="{% url 'instructor:add_course' %}">Create New Course</a></li>
+                <li><a class="dropdown-item" href="{% url 'instructor:my_activity' %}">My Activity</a></li>
                 <li><a class="dropdown-item" href="{% url 'instructor:my_students' %}">My Students</a></li>
                 <li><a class="dropdown-item" href="#">Notifications</a></li>
                 <li><a class="dropdown-item" href="#">Earnings & Payments</a></li>
                 <li><a class="dropdown-item" href="#">Help & Support</a></li>
                 <li><a class="dropdown-item" href="#">Account Settings</a></li>
-                <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item text-danger" href="{% url 'instructor:instructor_dashboard' %}">Home</a></li>
                 <li><hr class="dropdown-divider"></li>
                 <li><a class="dropdown-item text-danger" href="{% url 'logout_view' %}">Logout</a></li>
             </ul>
@@ -100,7 +100,10 @@
       <p class="text-muted small mb-3">{{ course.description|truncatewords:18 }}</p>
 
       <div class="d-flex justify-content-between align-items-center mb-2">
-        <span class="text-muted small"><i class="bi bi-people"></i> {{ course.students.count|default:"0" }} Students</span>
+        <span class="text-muted small"><i class="bi bi-people"></i> 
+          {{ course.enrollments.count|default:"0" }} Students
+        </span>
+
         <span class="fw-bold text-success">₹{{ course.price|default:"Free" }}</span>
       </div>
 
@@ -116,6 +119,9 @@
         </a>
         <a href="{% url 'instructor:give_feedback' course.id %}" class="btn btn-outline-secondary btn-sm">
           <i class="bi bi-chat-dots"></i> Feedback
+        </a>
+        <a href="{% url 'instructor:schedule_live_class' course.id %}" class="btn btn-outline-dark btn-sm">
+           <i class="bi bi-calendar-event"></i> Schedule Live Class
         </a>
         <a href="{% url 'instructor:add_event' course.id %}" class="btn btn-outline-dark btn-sm">
           <i class="bi bi-calendar-event"></i> Add Event
