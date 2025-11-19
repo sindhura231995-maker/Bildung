@@ -23,5 +23,6 @@ urlpatterns = [
     path('courses/<int:course_id>/add-event/', views.add_event, name='add_event'),
     path('schedule_live_class/<int:course_id>/', views.schedule_live_class, name='schedule_live_class'),
     path('my_activity/', views.my_activity, name='my_activity'),
+    path("calendar/", views.calendar_view, name="calendar_view"),
 
 ]

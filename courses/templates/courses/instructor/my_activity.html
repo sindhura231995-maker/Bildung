@@ -21,6 +21,7 @@
                 <li><a class="dropdown-item" href="{% url 'profile_view' %}">Profile</a></li>
                 <li><a class="dropdown-item" href="{% url 'instructor:add_course' %}">Create New Course</a></li>
                 <li><a class="dropdown-item" href="{% url 'instructor:my_activity' %}">My Activity</a></li>
+                <li><a class="dropdown-item" href="{% url 'instructor:calendar_view' %}">My Schedules</a></li>
                 <li><a class="dropdown-item" href="{% url 'instructor:my_students' %}">My Students</a></li>
                 <li><a class="dropdown-item" href="#">Notifications</a></li>
                 <li><a class="dropdown-item" href="#">Earnings & Payments</a></li>
@@ -37,29 +38,35 @@
   <h2 class="fw-bold text-primary mb-4">🎥 My Scheduled Live Classes</h2>
   
   {% if live_classes %}
-    <table class="table table-striped shadow-sm rounded-3">
-      <thead class="table-primary">
+  <table class="table table-striped shadow-sm rounded-3">
+    <thead class="table-primary">
+      <tr>
+        <th>Course</th>
+        <th>Topic</th>
+        <th>Date</th>
+        <th>Time</th>
+        <th>Join</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      {% for session in live_classes %}
         <tr>
-          <th>Course</th>
-          <th>Topic</th>
-          <th>Date</th>
-          <th>Time</th>
+          <td>{{ session.course.title }}</td>
+          <td>{{ session.topic }}</td>
+          <td>{{ session.date }}</td>
+          <td>{{ session.time }}</td>
+          <td>
+            <a href="#" class="btn btn-success btn-sm">Click here</a>
+          </td>
         </tr>
-      </thead>
-      <tbody>
-        {% for session in live_classes %}
-          <tr>
-            <td>{{ session.course.title }}</td>
-            <td>{{ session.topic }}</td>
-            <td>{{ session.date }}</td>
-            <td>{{ session.time }}</td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  {% else %}
-    <div class="alert alert-info">No live classes scheduled yet.</div>
-  {% endif %}
+      {% endfor %}
+    </tbody>
+  </table>
+{% else %}
+  <div class="alert alert-info">No live classes scheduled yet.</div>
+{% endif %}
+
 </div>
 </body>
 </html>

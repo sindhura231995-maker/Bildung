@@ -1,20 +1,39 @@
 {% extends "base.html" %}
+{% load static %}
+
 {% block content %}
-<h2>Add Event for {{ course.title }}</h2>
-<form method="post">
-    {% csrf_token %}
-    <label>Title:</label><br>
-    <input type="text" name="title" required><br><br>
+<div class="container py-5">
+    <h2>Add Event for {{ course.title }}</h2>
 
-    <label>Description:</label><br>
-    <textarea name="description"></textarea><br><br>
+    <form method="post" class="mt-4">
+        {% csrf_token %}
 
-    <label>Start Time:</label><br>
-    <input type="datetime-local" name="start_time" required><br><br>
+        <div class="mb-3">
+            <label>Title</label>
+            <input type="text" name="title" class="form-control" required>
+        </div>
 
-    <label>End Time:</label><br>
-    <input type="datetime-local" name="end_time" required><br><br>
+        <div class="mb-3">
+            <label>Description</label>
+            <textarea name="description" class="form-control"></textarea>
+        </div>
 
-    <button type="submit">Add Event</button>
-</form>
+        <div class="mb-3">
+            <label>Event Date</label>
+            <input type="date" name="event_date" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label>Start Time</label>
+            <input type="time" name="start_time" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label>End Time</label>
+            <input type="time" name="end_time" class="form-control" required>
+        </div>
+
+        <button class="btn btn-primary">Create Event</button>
+    </form>
+</div>
 {% endblock %}

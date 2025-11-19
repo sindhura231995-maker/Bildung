@@ -1,6 +1,6 @@
 from django import forms
 from django.utils.text import slugify
-from .models import Course, Lecture, Feedback, Enrollment, Module, LiveClass
+from .models import Course, Lecture, Feedback, Enrollment, Module, LiveClass, CourseEvent
 from django.forms import inlineformset_factory
 
 
@@ -72,6 +72,15 @@ class FeedbackForm(forms.ModelForm):
             enrolled_students = Enrollment.objects.filter(course=course).values_list("student", flat=True)
             self.fields['student'].queryset = course.students.filter(id__in=enrolled_students)
 
+
+class CourseEventForm(forms.ModelForm):
+    event_date = forms.DateField(widget=forms.DateInput(attrs={'type': 'date'}))
+    start_time_input = forms.TimeField(widget=forms.TimeInput(attrs={'type': 'time'}))
+    end_time_input = forms.TimeField(widget=forms.TimeInput(attrs={'type': 'time'}))
+
+    class Meta:
+        model = CourseEvent
+        fields = ['title', 'description']
 
 class LiveClassForm(forms.ModelForm):
     class Meta:

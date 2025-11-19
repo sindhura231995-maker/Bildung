@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Instructor Calendar</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
+
+<style>
+
+#calendar {
+  max-width: 100%;
+  margin: 0 auto;
+  font-size: 0.75rem !important; 
+}
+
+.fc .fc-toolbar-title {
+  font-size: 1rem !important; 
+}
+
+.fc .fc-daygrid-day-number {
+  font-size: 0.7rem !important;
+}
+
+.fc .fc-event {
+  border-radius: 8px;
+  font-size: 0.65rem !important; 
+  padding: 2px 4px;
+  cursor: pointer;
+}
+
+
+.fc-daygrid-day.has-event .fc-daygrid-day-frame {
+  border-radius: 10px;
+  position: relative;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.fc-daygrid-day.has-event.live-only .fc-daygrid-day-frame {
+  background-color: rgba(13,110,253,0.12) !important;
+  box-shadow: inset 0 0 0 1px rgba(13,110,253,0.25);
+}
+
+.fc-daygrid-day.has-event.event-only .fc-daygrid-day-frame {
+  background-color: rgba(25,135,84,0.12) !important;
+  box-shadow: inset 0 0 0 1px rgba(25,135,84,0.25);
+}
+
+.fc-daygrid-day.has-event.mixed .fc-daygrid-day-frame {
+  background: linear-gradient(90deg, rgba(13,110,253,0.06), rgba(25,135,84,0.06)) !important;
+  box-shadow: inset 0 0 0 1px rgba(75,0,130,0.25);
+}
+
+.event-count-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  min-width: 18px;
+  height: 18px;
+  line-height: 16px;
+  padding: 0 5px;
+  font-size: 0.65rem;
+  border-radius: 999px;
+  color: white;
+  text-align: center;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.fc-daygrid-day.has-event.live-only .event-count-badge { background: #0d6efd; }
+.fc-daygrid-day.has-event.event-only .event-count-badge { background: #198754; }
+.fc-daygrid-day.has-event.mixed .event-count-badge { background: #6f42c1; }
+
+</style>
+
+</head>
+
+<body class="bg-light">
+
+<div class="d-flex justify-content-between align-items-center p-3 bg-white shadow-sm">
+
+  <a href="{% url 'instructor:instructor_dashboard' %}" class="text-decoration-none text-dark">
+      <h3 class="m-0 fw-bold">Bildung</h3>
+  </a>
+
+  <div class="d-flex align-items-center gap-3">
+      <h4 class="m-0">Hello, {{ user.first_name }} {{ user.last_name }}</h4>
+
+      <div class="dropdown">
+          <button class="btn rounded-circle shadow"
+              style="background:gray;color:white;width:45px;height:45px;"
+              type="button" data-bs-toggle="dropdown">
+              {{ request.user.username|first|upper }}
+          </button>
+
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" href="{% url 'profile_view' %}">Profile</a></li>
+                <li><a class="dropdown-item" href="{% url 'instructor:add_course' %}">Create New Course</a></li>
+                <li><a class="dropdown-item" href="{% url 'instructor:my_activity' %}">My Activity</a></li>
+                <li><a class="dropdown-item" href="{% url 'instructor:my_students' %}">My Students</a></li>
+                <li><a class="dropdown-item" href="{% url 'instructor:calendar_view' %}">My Schedules</a></li>
+                <li><a class="dropdown-item" href="#">Notifications</a></li>
+                <li><a class="dropdown-item" href="#">Earnings & Payments</a></li>
+                <li><a class="dropdown-item" href="#">Help & Support</a></li>
+                <li><a class="dropdown-item" href="#">Account Settings</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item text-danger" href="{% url 'logout_view' %}">Logout</a></li>
+          </ul>
+      </div>
+  </div>
+</div>
+
+
+<div class="container py-3">
+
+  <div class="text-center mb-3">
+    <h3 class="text-primary">🗓 Scheduled Classes & Events</h3>
+  </div>
+
+  <div class="shadow-sm p-3 mx-auto" style="max-width: 550px;">
+    <div id="calendar"></div>
+  </div>
+
+</div>
+
+
+<div class="modal fade" id="classModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-3 shadow">
+
+      <div class="modal-header bg-primary text-white rounded-top-4">
+        <h5 class="modal-title">Details</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+
+        <h6 class="fw-bold text-primary" id="modalTitle"></h6>
+
+        <p class="text-muted mb-2"><strong>Course:</strong> <span id="modalCourse"></span></p>
+
+        <p class="text-muted mb-1"><strong>Date:</strong> <span id="modalDate"></span></p>
+        <p class="text-muted mb-3"><strong>Time:</strong> <span id="modalTime"></span></p>
+
+        <p id="modalDesc" class="text-muted"></p>
+
+      </div>
+
+      <div class="modal-footer">
+        <a id="modalActionBtn" class="btn"></a>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+
+<script>
+
+document.addEventListener('DOMContentLoaded', function() {
+
+  const events = {{ events|safe }};
+  const calendarEl = document.getElementById('calendar');
+
+  const dateMap = {};
+
+  events.forEach(ev => {
+      let start = typeof ev.start === 'string' ? ev.start : ev.start.toISOString();
+      const dateStr = start.slice(0,10);
+
+      if (!dateMap[dateStr]) dateMap[dateStr] = { count: 0, hasLive: false, hasEvent: false };
+
+      dateMap[dateStr].count++;
+
+      if (ev.type === "live_class") dateMap[dateStr].hasLive = true;
+      if (ev.type === "event") dateMap[dateStr].hasEvent = true;
+  });
+
+  const calendar = new FullCalendar.Calendar(calendarEl, {
+
+    initialView: 'dayGridMonth',
+    height: "auto",
+    contentHeight: "auto",
+    expandRows: true,
+    aspectRatio: 1,
+
+    headerToolbar: {
+      left:'prev,next',
+      center:'title',
+      right:''
+    },
+
+    events: events,
+    eventDisplay: "block",
+
+    eventContent: function(info) {
+        return {
+            html: `<div style="font-weight:600;">${info.event.title}</div>`
+        };
+    },
+
+    dayCellDidMount: function(info) {
+      const ds = info.dateStr;
+      const d = dateMap[ds];
+      if (!d) return;
+
+      info.el.classList.add('has-event');
+
+      if (d.hasLive && d.hasEvent) info.el.classList.add('mixed');
+      else if (d.hasLive) info.el.classList.add('live-only');
+      else if (d.hasEvent) info.el.classList.add('event-only');
+
+      const frame = info.el.querySelector('.fc-daygrid-day-frame');
+      if (frame) {
+        const badge = document.createElement('span');
+        badge.className = 'event-count-badge';
+        badge.textContent = d.count > 1 ? d.count : '●';
+        frame.appendChild(badge);
+      }
+    },
+
+    eventClick: function(info) {
+      const modal = new bootstrap.Modal(document.getElementById('classModal'));
+      const dt = new Date(info.event.start);
+      const props = info.event.extendedProps;
+
+      document.getElementById('modalTitle').textContent =
+          props.topic || props.event_title || info.event.title;
+
+      document.getElementById('modalCourse').textContent = props.course_name || "";
+
+      document.getElementById('modalDate').textContent =
+        dt.toLocaleDateString([], { year:'numeric', month:'short', day:'numeric', weekday:'long' });
+
+      document.getElementById('modalTime').textContent =
+        dt.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
+
+      document.getElementById('modalDesc').textContent =
+        props.event_description || '';
+
+      const btn = document.getElementById('modalActionBtn');
+
+      if (props.type === "live_class") {
+        btn.textContent = "Join";
+        btn.className = "btn btn-success";
+        btn.href = props.join_url || "#";
+      } else {
+        btn.textContent = "Join";
+        btn.className = "btn btn-primary";
+        btn.href = props.detail_url || "#";
+      }
+
+      modal.show();
+    }
+
+  });
+
+  calendar.render();
+});
+
+</script>
+
+</body>
+</html>

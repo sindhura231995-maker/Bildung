@@ -110,12 +110,14 @@ class CourseEvent(models.Model):
     )
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
+    date = models.DateField(null=True, blank=True)
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"{self.course.title} - {self.title} ({self.start_time})"
+
 
 import uuid
 
