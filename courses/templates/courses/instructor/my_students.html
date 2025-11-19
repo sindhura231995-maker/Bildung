@@ -1,112 +1,1411 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My students</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Instructor Dashboard - Student Profiles</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 250px;
+            background: linear-gradient(180deg, #2c3e50, #1a2530);
+            color: white;
+            padding: 20px 0;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo {
+            padding: 0 20px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .logo h2 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo i {
+            color: #3498db;
+        }
+
+        .menu {
+            list-style: none;
+            padding: 0 15px;
+        }
+
+        .menu li {
+            margin-bottom: 10px;
+        }
+
+        .menu a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #bdc3c7;
+            text-decoration: none;
+            padding: 12px 15px;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .menu a:hover, .menu a.active {
+            background: rgba(52, 152, 219, 0.2);
+            color: #3498db;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            font-size: 28px;
+        }
+
+        .search-bar {
+            display: flex;
+            align-items: center;
+            background: white;
+            border-radius: 50px;
+            padding: 8px 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            width: 300px;
+        }
+
+        .search-bar input {
+            border: none;
+            outline: none;
+            padding: 8px;
+            width: 100%;
+            font-size: 16px;
+        }
+
+        .search-bar i {
+            color: #7f8c8d;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: #3498db;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .stat-1 .stat-icon {
+            background: rgba(52, 152, 219, 0.2);
+            color: #3498db;
+        }
+
+        .stat-2 .stat-icon {
+            background: rgba(46, 204, 113, 0.2);
+            color: #2ecc71;
+        }
+
+        .stat-3 .stat-icon {
+            background: rgba(155, 89, 182, 0.2);
+            color: #9b59b6;
+        }
+
+        .stat-4 .stat-icon {
+            background: rgba(241, 196, 15, 0.2);
+            color: #f1c40f;
+        }
+
+        .stat-info h3 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .stat-info p {
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+
+        .page-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .page-title h2 {
+            color: #2c3e50;
+        }
+
+        .filter-options {
+            display: flex;
+            gap: 10px;
+        }
+
+        .filter-btn {
+            padding: 8px 15px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .filter-btn.active {
+            background: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+
+        .students-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+        }
+
+        .student-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .student-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+        }
+
+        .student-avatar {
+            height: 120px;
+            background: linear-gradient(135deg, #3498db, #2c3e50);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 40px;
+        }
+
+        .student-info {
+            padding: 20px;
+        }
+
+        .student-name {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #2c3e50;
+        }
+
+        .student-email {
+            color: #7f8c8d;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .student-progress {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .progress-bar {
+            flex: 1;
+            height: 8px;
+            background: #ecf0f1;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #2ecc71;
+            border-radius: 4px;
+        }
+
+        .progress-text {
+            font-size: 14px;
+            color: #7f8c8d;
+        }
+
+        .student-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+
+        .tag {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .tag-online {
+            background: rgba(46, 204, 113, 0.2);
+            color: #27ae60;
+        }
+
+        .tag-advanced {
+            background: rgba(155, 89, 182, 0.2);
+            color: #8e44ad;
+        }
+
+        .tag-beginner {
+            background: rgba(52, 152, 219, 0.2);
+            color: #2980b9;
+        }
+
+        /* Enhanced hover popup */
+        .student-hover-popup {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            width: 320px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s ease;
+            border: 1px solid #e1e8ed;
+        }
+
+        .student-card:hover .student-hover-popup {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+            pointer-events: auto;
+        }
+
+        .popup-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .popup-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3498db, #2c3e50);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+        }
+
+        .popup-info h3 {
+            font-size: 18px;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .popup-info p {
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+
+        .popup-details {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .popup-detail {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+        }
+
+        .popup-detail i {
+            width: 20px;
+            color: #3498db;
+        }
+
+        .popup-progress {
+            margin-top: 15px;
+        }
+
+        .popup-progress-bar {
+            height: 6px;
+            background: #ecf0f1;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 5px;
+        }
+
+        .popup-progress-fill {
+            height: 100%;
+            background: #2ecc71;
+            border-radius: 3px;
+        }
+
+        .popup-progress-text {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #7f8c8d;
+        }
+
+        .student-details-panel {
+            position: fixed;
+            top: 0;
+            right: -600px;
+            width: 600px;
+            height: 100vh;
+            background: white;
+            box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+            transition: right 0.4s ease-in-out;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        .student-details-panel.active {
+            right: 0;
+        }
+
+        .panel-header {
+            background: linear-gradient(135deg, #3498db, #2c3e50);
+            color: white;
+            padding: 25px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .panel-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+        }
+
+        .panel-header-info h2 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .panel-header-info p {
+            opacity: 0.8;
+        }
+
+        .close-panel {
+            position: absolute;
+            top: 25px;
+            right: 25px;
+            background: rgba(255, 255, 255, 0.2);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .close-panel:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .panel-content {
+            padding: 25px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #ecf0f1;
+            cursor: pointer;
+        }
+
+        .section-title h3 {
+            color: #2c3e50;
+            font-size: 18px;
+        }
+
+        .section-content {
+            display: none;
+        }
+
+        .section.active .section-content {
+            display: block;
+        }
+
+        .course-item {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .course-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .course-name {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .course-status {
+            font-size: 14px;
+            padding: 4px 10px;
+            border-radius: 20px;
+        }
+
+        .status-completed {
+            background: rgba(46, 204, 113, 0.2);
+            color: #27ae60;
+        }
+
+        .status-in-progress {
+            background: rgba(241, 196, 15, 0.2);
+            color: #f39c12;
+        }
+
+        .status-not-started {
+            background: rgba(231, 76, 60, 0.2);
+            color: #c0392b;
+        }
+
+        .module-list {
+            margin-top: 10px;
+        }
+
+        .module-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .module-name {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .module-progress {
+            width: 100px;
+            height: 6px;
+            background: #ecf0f1;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .module-progress-fill {
+            height: 100%;
+            border-radius: 3px;
+        }
+
+        .progress-complete {
+            background: #2ecc71;
+        }
+
+        .progress-incomplete {
+            background: #e74c3c;
+        }
+
+        .activity-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .activity-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .activity-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-size: 20px;
+        }
+
+        .activity-1 .activity-icon {
+            background: rgba(52, 152, 219, 0.2);
+            color: #3498db;
+        }
+
+        .activity-2 .activity-icon {
+            background: rgba(46, 204, 113, 0.2);
+            color: #2ecc71;
+        }
+
+        .activity-3 .activity-icon {
+            background: rgba(155, 89, 182, 0.2);
+            color: #9b59b6;
+        }
+
+        .activity-4 .activity-icon {
+            background: rgba(241, 196, 15, 0.2);
+            color: #f1c40f;
+        }
+
+        .activity-value {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .activity-label {
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+
+        .contact-info {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .contact-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+        }
+
+        .contact-1 .contact-icon {
+            background: #3498db;
+        }
+
+        .contact-2 .contact-icon {
+            background: #9b59b6;
+        }
+
+        .contact-3 .contact-icon {
+            background: #2ecc71;
+        }
+
+        .contact-4 .contact-icon {
+            background: #e74c3c;
+        }
+
+        .contact-detail h4 {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-bottom: 5px;
+        }
+
+        .contact-detail p {
+            font-weight: 500;
+            color: #2c3e50;
+        }
+
+        .arrow {
+            transition: transform 0.3s;
+        }
+
+        .section.active .arrow {
+            transform: rotate(180deg);
+        }
+
+        @media (max-width: 1200px) {
+            .students-grid {
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            }
+            
+            .student-details-panel {
+                width: 500px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: auto;
+            }
+            
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .student-details-panel {
+                width: 100%;
+            }
+            
+            .student-hover-popup {
+                width: 280px;
+            }
+        }
+    </style>
 </head>
+<body>
+    
 
-<body class="bg-light">
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="header">
+                <h1>Student Profiles</h1>
+                <div class="search-bar">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Search students...">
+                </div>
+                <div class="user-info">
+                    
+                    <div class="user-avatar">JD</div>
+                </div>
+            </div>
 
-    <div class="d-flex justify-content-between align-items-center p-3 bg-white shadow-sm">
-        <a href="{% url 'instructor:instructor_dashboard' %}" class="text-decoration-none text-dark">
-            <h3 class="m-0 fw-bold">Bildung</h3>
-        </a>
-
-        <div class="dropdown">
-            <button class="btn rounded-circle shadow"
-                style="background:gray;color:white;width:45px;height:45px;" type="button"
-                data-bs-toggle="dropdown">
-                {{ request.user.username|first|upper }}
-            </button>
-
-            <ul class="dropdown-menu dropdown-menu-end">
-                <li><a class="dropdown-item" href="{% url 'profile_view' %}">Profile</a></li>
-                <li><a class="dropdown-item" href="{% url 'instructor:add_course' %}">Create New Course</a></li>
-                <li><a class="dropdown-item" href="{% url 'instructor:my_activity' %}">My Activity</a></li>
-                <li><a class="dropdown-item" href="{% url 'instructor:calendar_view' %}">My Schedules</a></li>
-                <li><a class="dropdown-item" href="{% url 'instructor:my_students' %}">My Students</a></li>
-                <li><a class="dropdown-item" href="#">Notifications</a></li>
-                <li><a class="dropdown-item" href="#">Earnings & Payments</a></li>
-                <li><a class="dropdown-item" href="#">Help & Support</a></li>
-                <li><a class="dropdown-item" href="#">Account Settings</a></li>
-                <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item text-danger" href="{% url 'logout_view' %}">Logout</a></li>
-            </ul>
-        </div>
-    </div>
-
-    <!-- MAIN CONTENT -->
-    <div class="container py-5">
-
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2 class="fw-bold text-dark">My Students</h2>
-        </div>
-
-        {% if students_data %}
-        <div class="row g-4">
-
-            {% for s in students_data %}
-            <div class="col-md-4">
-                <div class="card shadow-sm border-0 rounded-4">
-                    <div class="card-body">
-
-                        <h5 class="fw-bold mb-1">
-                            <a href="{% url 'instructor:view_student_profile' s.student.id %}"
-                                class="text-decoration-none text-dark">
-                                {{ s.student.get_full_name|default:s.student.username }}
-                            </a>
-                        </h5>
-
-                        <p class="text-muted small mb-2">{{ s.student.email }}</p>
-
-                        <hr>
-
-                        <h6 class="text-muted small mb-2">Enrolled Courses:</h6>
-
-                        <ul class="list-unstyled small">
-
-                            {% for course in s.courses %}
-                            <li class="mb-3">
-                                🎓 <strong>{{ course.title }}</strong>
-
-                                <div class="mt-1">
-                                    <div class="progress" style="height: 8px; border-radius: 5px;">
-                                        <div class="progress-bar 
-                                            {% if course.progress == 100 %}bg-success
-                                            {% elif course.progress >= 50 %}bg-info
-                                            {% else %}bg-warning{% endif %}"
-                                            style="width: {{ course.progress }}%">
-                                        </div>
-                                    </div>
-                                    <small class="text-muted">{{ course.progress }}% complete</small>
-                                </div>
-                            </li>
-
-                            {% empty %}
-                            <li class="text-muted">No courses enrolled</li>
-                            {% endfor %}
-                        </ul>
-
+            <!-- Stats Cards -->
+            <div class="stats">
+                <div class="stat-card stat-1">
+                    <div class="stat-icon">
+                        <i class="fas fa-user-graduate"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>142</h3>
+                        <p>Total Students</p>
+                    </div>
+                </div>
+                <div class="stat-card stat-2">
+                    <div class="stat-icon">
+                        <i class="fas fa-book-open"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>24</h3>
+                        <p>Active Courses</p>
+                    </div>
+                </div>
+                <div class="stat-card stat-3">
+                    <div class="stat-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>78%</h3>
+                        <p>Average Progress</p>
+                    </div>
+                </div>
+                <div class="stat-card stat-4">
+                    <div class="stat-icon">
+                        <i class="fas fa-tasks"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>326</h3>
+                        <p>Assignments Graded</p>
                     </div>
                 </div>
             </div>
-            {% endfor %}
 
-        </div>
+           
 
-        {% else %}
-        <div class="alert alert-info text-center rounded-3 shadow-sm">
-            <h5>No Students Found</h5>
-            <p class="mb-0">No one has enrolled in your courses yet.</p>
+            <div class="students-grid">
+                <!-- Student Card 1 -->
+                <div class="student-card" onclick="openStudentPanel('student1')">
+                    <div class="student-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="student-info">
+                        <h3 class="student-name">Alex Johnson</h3>
+                        <p class="student-email">alex.johnson@example.com</p>
+                        <div class="student-progress">
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 85%"></div>
+                            </div>
+                            <span class="progress-text">85%</span>
+                        </div>
+                        <div class="student-tags">
+                            <span class="tag tag-online">Online</span>
+                            <span class="tag tag-advanced">Advanced</span>
+                        </div>
+                    </div>
+                    <!-- Hover Popup -->
+                    <div class="student-hover-popup">
+                        <div class="popup-header">
+                            <div class="popup-avatar">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <div class="popup-info">
+                                <h3>Alex Johnson</h3>
+                                <p>Web Development Student</p>
+                            </div>
+                        </div>
+                        <div class="popup-details">
+                            <div class="popup-detail">
+                                <i class="fas fa-book"></i>
+                                <span>Enrolled in 5 courses</span>
+                            </div>
+                            <div class="popup-detail">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Completed 3 courses</span>
+                            </div>
+                            <div class="popup-detail">
+                                <i class="fas fa-clock"></i>
+                                <span>Last active: 2 hours ago</span>
+                            </div>
+                            <div class="popup-detail">
+                                <i class="fas fa-star"></i>
+                                <span>Average score: 92%</span>
+                            </div>
+                        </div>
+                        <div class="popup-progress">
+                            <div class="popup-progress-bar">
+                                <div class="popup-progress-fill" style="width: 85%"></div>
+                            </div>
+                            <div class="popup-progress-text">
+                                <span>Overall Progress</span>
+                                <span>85%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Student Card 2 -->
+                <div class="student-card" onclick="openStudentPanel('student2')">
+                    <div class="student-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="student-info">
+                        <h3 class="student-name">Maria Garcia</h3>
+                        <p class="student-email">maria.garcia@example.com</p>
+                        <div class="student-progress">
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 42%"></div>
+                            </div>
+                            <span class="progress-text">42%</span>
+                        </div>
+                        <div class="student-tags">
+                            <span class="tag tag-online">Online</span>
+                            <span class="tag tag-beginner">Beginner</span>
+                        </div>
+                    </div>
+                    <!-- Hover Popup -->
+                    <div class="student-hover-popup">
+                        <div class="popup-header">
+                            <div class="popup-avatar">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <div class="popup-info">
+                                <h3>Maria Garcia</h3>
+                                <p>Beginner Student</p>
+                            </div>
+                        </div>
+                        <div class="popup-details">
+                            <div class="popup-detail">
+                                <i class="fas fa-book"></i>
+                                <span>Enrolled in 3 courses</span>
+                            </div>
+                            <div class="popup-detail">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Completed 1 course</span>
+                            </div>
+                            <div class="popup-detail">
+                                <i class="fas fa-clock"></i>
+                                <span>Last active: 1 day ago</span>
+                            </div>
+                            <div class="popup-detail">
+                                <i class="fas fa-star"></i>
+                                <span>Average score: 76%</span>
+                            </div>
+                        </div>
+                        <div class="popup-progress">
+                            <div class="popup-progress-bar">
+                                <div class="popup-progress-fill" style="width: 42%"></div>
+                            </div>
+                            <div class="popup-progress-text">
+                                <span>Overall Progress</span>
+                                <span>42%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Student Card 3 -->
+                <div class="student-card" onclick="openStudentPanel('student3')">
+                    <div class="student-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="student-info">
+                        <h3 class="student-name">David Smith</h3>
+                        <p class="student-email">david.smith@example.com</p>
+                        <div class="student-progress">
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 67%"></div>
+                            </div>
+                            <span class="progress-text">67%</span>
+                        </div>
+                        <div class="student-tags">
+                            <span class="tag tag-online">Online</span>
+                            <span class="tag tag-advanced">Advanced</span>
+                        </div>
+                    </div>
+                    <!-- Hover Popup -->
+                    <div class="student-hover-popup">
+                        <div class="popup-header">
+                            <div class="popup-avatar">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <div class="popup-info">
+                                <h3>David Smith</h3>
+                                <p>Advanced Student</p>
+                            </div>
+                        </div>
+                        <div class="popup-details">
+                            <div class="popup-detail">
+                                <i class="fas fa-book"></i>
+                                <span>Enrolled in 6 courses</span>
+                            </div>
+                            <div class="popup-detail">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Completed 4 courses</span>
+                            </div>
+                            <div class="popup-detail">
+                                <i class="fas fa-clock"></i>
+                                <span>Last active: 5 hours ago</span>
+                            </div>
+                            <div class="popup-detail">
+                                <i class="fas fa-star"></i>
+                                <span>Average score: 88%</span>
+                            </div>
+                        </div>
+                        <div class="popup-progress">
+                            <div class="popup-progress-bar">
+                                <div class="popup-progress-fill" style="width: 67%"></div>
+                            </div>
+                            <div class="popup-progress-text">
+                                <span>Overall Progress</span>
+                                <span>67%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Student Card 4 -->
+                <div class="student-card" onclick="openStudentPanel('student4')">
+                    <div class="student-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="student-info">
+                        <h3 class="student-name">Sarah Williams</h3>
+                        <p class="student-email">sarah.williams@example.com</p>
+                        <div class="student-progress">
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 93%"></div>
+                            </div>
+                            <span class="progress-text">93%</span>
+                        </div>
+                        <div class="student-tags">
+                            <span class="tag tag-online">Online</span>
+                            <span class="tag tag-advanced">Advanced</span>
+                        </div>
+                    </div>
+                    <!-- Hover Popup -->
+                    <div class="student-hover-popup">
+                        <div class="popup-header">
+                            <div class="popup-avatar">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <div class="popup-info">
+                                <h3>Sarah Williams</h3>
+                                <p>Top Performing Student</p>
+                            </div>
+                        </div>
+                        <div class="popup-details">
+                            <div class="popup-detail">
+                                <i class="fas fa-book"></i>
+                                <span>Enrolled in 4 courses</span>
+                            </div>
+                            <div class="popup-detail">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Completed 4 courses</span>
+                            </div>
+                            <div class="popup-detail">
+                                <i class="fas fa-clock"></i>
+                                <span>Last active: 30 minutes ago</span>
+                            </div>
+                            <div class="popup-detail">
+                                <i class="fas fa-star"></i>
+                                <span>Average score: 96%</span>
+                            </div>
+                        </div>
+                        <div class="popup-progress">
+                            <div class="popup-progress-bar">
+                                <div class="popup-progress-fill" style="width: 93%"></div>
+                            </div>
+                            <div class="popup-progress-text">
+                                <span>Overall Progress</span>
+                                <span>93%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Student Card 5 -->
+                <div class="student-card" onclick="openStudentPanel('student5')">
+                    <div class="student-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="student-info">
+                        <h3 class="student-name">James Brown</h3>
+                        <p class="student-email">james.brown@example.com</p>
+                        <div class="student-progress">
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 28%"></div>
+                            </div>
+                            <span class="progress-text">28%</span>
+                        </div>
+                        <div class="student-tags">
+                            <span class="tag tag-online">Online</span>
+                            <span class="tag tag-beginner">Beginner</span>
+                        </div>
+                    </div>
+                    <!-- Hover Popup -->
+                    <div class="student-hover-popup">
+                        <div class="popup-header">
+                            <div class="popup-avatar">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <div class="popup-info">
+                                <h3>James Brown</h3>
+                                <p>New Student</p>
+                            </div>
+                        </div>
+                        <div class="popup-details">
+                            <div class="popup-detail">
+                                <i class="fas fa-book"></i>
+                                <span>Enrolled in 2 courses</span>
+                            </div>
+                            <div class="popup-detail">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Completed 0 courses</span>
+                            </div>
+                            <div class="popup-detail">
+                                <i class="fas fa-clock"></i>
+                                <span>Last active: 3 days ago</span>
+                            </div>
+                            <div class="popup-detail">
+                                <i class="fas fa-star"></i>
+                                <span>Average score: 65%</span>
+                            </div>
+                        </div>
+                        <div class="popup-progress">
+                            <div class="popup-progress-bar">
+                                <div class="popup-progress-fill" style="width: 28%"></div>
+                            </div>
+                            <div class="popup-progress-text">
+                                <span>Overall Progress</span>
+                                <span>28%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Student Card 6 -->
+                <div class="student-card" onclick="openStudentPanel('student6')">
+                    <div class="student-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="student-info">
+                        <h3 class="student-name">Emma Wilson</h3>
+                        <p class="student-email">emma.wilson@example.com</p>
+                        <div class="student-progress">
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 75%"></div>
+                            </div>
+                            <span class="progress-text">75%</span>
+                        </div>
+                        <div class="student-tags">
+                            <span class="tag tag-online">Online</span>
+                            <span class="tag tag-advanced">Advanced</span>
+                        </div>
+                    </div>
+                    <!-- Hover Popup -->
+                    <div class="student-hover-popup">
+                        <div class="popup-header">
+                            <div class="popup-avatar">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <div class="popup-info">
+                                <h3>Emma Wilson</h3>
+                                <p>Advanced Student</p>
+                            </div>
+                        </div>
+                        <div class="popup-details">
+                            <div class="popup-detail">
+                                <i class="fas fa-book"></i>
+                                <span>Enrolled in 5 courses</span>
+                            </div>
+                            <div class="popup-detail">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Completed 3 courses</span>
+                            </div>
+                            <div class="popup-detail">
+                                <i class="fas fa-clock"></i>
+                                <span>Last active: 1 hour ago</span>
+                            </div>
+                            <div class="popup-detail">
+                                <i class="fas fa-star"></i>
+                                <span>Average score: 84%</span>
+                            </div>
+                        </div>
+                        <div class="popup-progress">
+                            <div class="popup-progress-bar">
+                                <div class="popup-progress-fill" style="width: 75%"></div>
+                            </div>
+                            <div class="popup-progress-text">
+                                <span>Overall Progress</span>
+                                <span>75%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        {% endif %}
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Student Details Panel -->
+    <div class="student-details-panel" id="studentPanel">
+        <div class="panel-header">
+            <div class="panel-avatar">
+                <i class="fas fa-user"></i>
+            </div>
+            <div class="panel-header-info">
+                <h2 id="studentName">Alex Johnson</h2>
+                <p>Web Development Student</p>
+            </div>
+            <div class="close-panel" onclick="closeStudentPanel()">
+                <i class="fas fa-times"></i>
+            </div>
+        </div>
+        <div class="panel-content">
+            <!-- Courses Section -->
+            <div class="section active" id="coursesSection">
+                <div class="section-title" onclick="toggleSection('coursesSection')">
+                    <h3>Enrolled Courses</h3>
+                    <i class="fas fa-chevron-down arrow"></i>
+                </div>
+                <div class="section-content">
+                    <!-- Course 1 -->
+                    <div class="course-item">
+                        <div class="course-header">
+                            <div class="course-name">Web Development Fundamentals</div>
+                            <div class="course-status status-completed">Completed</div>
+                        </div>
+                        <div class="module-list">
+                            <div class="module-item">
+                                <div class="module-name">
+                                    <i class="fas fa-play-circle"></i>
+                                    <span>HTML Basics</span>
+                                </div>
+                                <div class="module-progress">
+                                    <div class="module-progress-fill progress-complete" style="width: 100%"></div>
+                                </div>
+                            </div>
+                            <div class="module-item">
+                                <div class="module-name">
+                                    <i class="fas fa-play-circle"></i>
+                                    <span>CSS Styling</span>
+                                </div>
+                                <div class="module-progress">
+                                    <div class="module-progress-fill progress-complete" style="width: 100%"></div>
+                                </div>
+                            </div>
+                            <div class="module-item">
+                                <div class="module-name">
+                                    <i class="fas fa-play-circle"></i>
+                                    <span>JavaScript Introduction</span>
+                                </div>
+                                <div class="module-progress">
+                                    <div class="module-progress-fill progress-complete" style="width: 100%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
+                    <!-- Course 2 -->
+                    <div class="course-item">
+                        <div class="course-header">
+                            <div class="course-name">Advanced JavaScript</div>
+                            <div class="course-status status-in-progress">In Progress</div>
+                        </div>
+                        <div class="module-list">
+                            <div class="module-item">
+                                <div class="module-name">
+                                    <i class="fas fa-play-circle"></i>
+                                    <span>ES6 Features</span>
+                                </div>
+                                <div class="module-progress">
+                                    <div class="module-progress-fill progress-complete" style="width: 100%"></div>
+                                </div>
+                            </div>
+                            <div class="module-item">
+                                <div class="module-name">
+                                    <i class="fas fa-play-circle"></i>
+                                    <span>Async Programming</span>
+                                </div>
+                                <div class="module-progress">
+                                    <div class="module-progress-fill progress-complete" style="width: 100%"></div>
+                                </div>
+                            </div>
+                            <div class="module-item">
+                                <div class="module-name">
+                                    <i class="fas fa-play-circle"></i>
+                                    <span>DOM Manipulation</span>
+                                </div>
+                                <div class="module-progress">
+                                    <div class="module-progress-fill progress-complete" style="width: 80%"></div>
+                                </div>
+                            </div>
+                            <div class="module-item">
+                                <div class="module-name">
+                                    <i class="fas fa-play-circle"></i>
+                                    <span>API Integration</span>
+                                </div>
+                                <div class="module-progress">
+                                    <div class="module-progress-fill progress-incomplete" style="width: 40%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Course 3 -->
+                    <div class="course-item">
+                        <div class="course-header">
+                            <div class="course-name">React Development</div>
+                            <div class="course-status status-not-started">Locked</div>
+                        </div>
+                        <p style="color: #7f8c8d; font-size: 14px; margin-top: 10px;">
+                            Complete "Advanced JavaScript" to unlock this course
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Activity Section -->
+            <div class="section" id="activitySection">
+                <div class="section-title" onclick="toggleSection('activitySection')">
+                    <h3>Activity Overview</h3>
+                    <i class="fas fa-chevron-down arrow"></i>
+                </div>
+                <div class="section-content">
+                    <div class="activity-grid">
+                        <div class="activity-card activity-1">
+                            <div class="activity-icon">
+                                <i class="fas fa-video"></i>
+                            </div>
+                            <div class="activity-value">24</div>
+                            <div class="activity-label">Live Classes Attended</div>
+                        </div>
+                        <div class="activity-card activity-2">
+                            <div class="activity-icon">
+                                <i class="fas fa-question-circle"></i>
+                            </div>
+                            <div class="activity-value">18</div>
+                            <div class="activity-label">Quizzes Attempted</div>
+                        </div>
+                        <div class="activity-card activity-3">
+                            <div class="activity-icon">
+                                <i class="fas fa-tasks"></i>
+                            </div>
+                            <div class="activity-value">12</div>
+                            <div class="activity-label">Assignments Submitted</div>
+                        </div>
+                        <div class="activity-card activity-4">
+                            <div class="activity-icon">
+                                <i class="fas fa-star"></i>
+                            </div>
+                            <div class="activity-value">92%</div>
+                            <div class="activity-label">Average Score</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact Section -->
+            <div class="section" id="contactSection">
+                <div class="section-title" onclick="toggleSection('contactSection')">
+                    <h3>Contact Information</h3>
+                    <i class="fas fa-chevron-down arrow"></i>
+                </div>
+                <div class="section-content">
+                    <div class="contact-info">
+                        <div class="contact-item contact-1">
+                            <div class="contact-icon">
+                                <i class="fas fa-envelope"></i>
+                            </div>
+                            <div class="contact-detail">
+                                <h4>Email</h4>
+                                <p>alex.johnson@example.com</p>
+                            </div>
+                        </div>
+                        <div class="contact-item contact-2">
+                            <div class="contact-icon">
+                                <i class="fas fa-phone"></i>
+                            </div>
+                            <div class="contact-detail">
+                                <h4>Phone</h4>
+                                <p>+1 (555) 123-4567</p>
+                            </div>
+                        </div>
+                        <div class="contact-item contact-3">
+                            <div class="contact-icon">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </div>
+                            <div class="contact-detail">
+                                <h4>Location</h4>
+                                <p>New York, USA</p>
+                            </div>
+                        </div>
+                        <div class="contact-item contact-4">
+                            <div class="contact-icon">
+                                <i class="fas fa-calendar-alt"></i>
+                            </div>
+                            <div class="contact-detail">
+                                <h4>Joined</h4>
+                                <p>January 15, 2023</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Function to open student details panel
+        function openStudentPanel(studentId) {
+            document.getElementById('studentPanel').classList.add('active');
+            
+            // In a real application, you would fetch student data based on studentId
+            // For this demo, we're just using static data
+        }
+
+        // Function to close student details panel
+        function closeStudentPanel() {
+            document.getElementById('studentPanel').classList.remove('active');
+        }
+
+        // Function to toggle section content
+        function toggleSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            section.classList.toggle('active');
+        }
+
+        // Close panel when clicking outside of it
+        document.addEventListener('click', function(event) {
+            const panel = document.getElementById('studentPanel');
+            if (!panel.contains(event.target) && !event.target.closest('.student-card')) {
+                closeStudentPanel();
+            }
+        });
+    </script>
 </body>
-
 </html>
