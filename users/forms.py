@@ -48,7 +48,6 @@ class ProfileForm(forms.ModelForm):
 
     class Meta:
         model = Profile
-        # Fields managed by this form (only Profile model fields)
         fields = ['about_me', 'phone', 'gender', 'date_of_birth', 'qualification', 'resume']
         widgets = {
             'about_me': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
@@ -116,8 +115,6 @@ class InstructorProfileForm(forms.ModelForm):
             'expertise',
             'experience',
             'about_me',
-            'linkedin',
-            'website',
             'phone',
             'gender',
             'date_of_birth',
@@ -130,8 +127,6 @@ class InstructorProfileForm(forms.ModelForm):
             'expertise': forms.TextInput(attrs={'class': 'form-control'}),
             'experience': forms.NumberInput(attrs={'class': 'form-control'}),
             'about_me': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
-            'linkedin': forms.URLInput(attrs={'class': 'form-control'}),
-            'website': forms.URLInput(attrs={'class': 'form-control'}),
             'phone': forms.TextInput(attrs={'class': 'form-control'}),
             'gender': forms.Select(attrs={'class': 'form-select'}),
             'date_of_birth': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),

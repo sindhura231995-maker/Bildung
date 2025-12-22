@@ -10,6 +10,7 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.contrib.auth.tokens import default_token_generator
 from django.conf import settings
+from courses.utils import check_and_send_reminders
 
 # Use only your custom User model
 from .models import User, Profile, LoginHistory, InstructorProfile
@@ -199,6 +200,7 @@ def student_dashboard(request):
     if request.user.role != "student":
         messages.error(request, "Access denied. Student area only.")
         return redirect("login")
+    check_and_send_reminders(request.user)
     all_courses = Course.objects.all()
 
     unread_count = Notification.objects.filter(
@@ -210,30 +212,14 @@ def student_dashboard(request):
         user=request.user,
         is_read=False
     ).order_by("-created_at")[:5]
+    enrolled_course_ids = Enrollment.objects.filter(
+        student=request.user
+    ).values_list("course_id", flat=True)
 
     return render(request, "courses/student/student_dashboard.html", {
         "all_courses": all_courses,
         "unread_count": unread_count,
         "unread_notifications": unread_notifications,
-    })
-
-from courses.utils import check_and_send_reminders
-
-@login_required
-def student_dashboard(request):
-    check_and_send_reminders(request.user)
-    unread_count = Notification.objects.filter(
-        user=request.user, is_read=False
-    ).count()
-
-    all_courses = Course.objects.all()
-    enrolled_course_ids = Enrollment.objects.filter(
-        student=request.user
-    ).values_list("course_id", flat=True)
-
-    return render(request, "students/student_dashboard.html", {
-        "unread_count": unread_count,
-        "all_courses": all_courses,
         "enrolled_course_ids": enrolled_course_ids,
     })
 

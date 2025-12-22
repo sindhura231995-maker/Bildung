@@ -7,21 +7,49 @@
       
       <!-- Display Messages -->
       {% if messages %}
-        {% for message in messages %}
-          <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-            {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  <div aria-live="polite" aria-atomic="true" class="position-relative">
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;">
+      {% for message in messages %}
+        <div class="toast align-items-center text-white bg-{{ message.tags }} border-0"
+             role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="5000"
+             id="autoToast">
+          <div class="d-flex">
+            <div class="toast-body">
+              {{ message }}
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto"
+                    data-bs-dismiss="toast"></button>
           </div>
-        {% endfor %}
-      {% endif %}
-
-      <!-- Display Form Errors -->
-      {% if form.errors %}
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-          <strong>Login failed!</strong> Please check your credentials and try again.
-          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
-      {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+  <!-- 🔥 Auto-show + auto-redirect script -->
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        var toastEl = document.getElementById("autoToast");
+        if (toastEl) {
+            var toast = new bootstrap.Toast(toastEl);
+            toast.show();
+
+            // Redirect after 5 sec
+            setTimeout(function() {
+                const msg = toastEl.innerText.toLowerCase();
+
+                if (msg.includes("login")) {
+                    window.location.href = "{% url 'student_dashboard' %}";
+                }
+
+                if (msg.includes("logout")) {
+                    window.location.href = "{% url 'auth_page' %}";
+                }
+            }, 5000);
+        }
+    });
+  </script>
+
+{% endif %}
+
 
       <!-- Display Non-field Errors -->
       {% if form.non_field_errors %}
@@ -168,7 +196,7 @@ document.getElementById('togglePassword').addEventListener('click', function() {
   }
 });
 
-// Auto-hide alerts after 5 seconds
+// Auto-hide normal alerts after 5 seconds
 document.addEventListener('DOMContentLoaded', function() {
   const alerts = document.querySelectorAll('.alert');
   alerts.forEach(function(alert) {
@@ -176,6 +204,13 @@ document.addEventListener('DOMContentLoaded', function() {
       const bsAlert = new bootstrap.Alert(alert);
       bsAlert.close();
     }, 5000);
+  });
+
+  // 🔥 Show Bootstrap Toast messages (login/logout popup)
+  var toastList = [].slice.call(document.querySelectorAll('.toast'));
+  toastList.map(function (toastEl) {
+    var toast = new bootstrap.Toast(toastEl);
+    toast.show();
   });
 });
 </script>

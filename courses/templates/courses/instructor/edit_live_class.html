@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4">
+
+    <h3>Edit Live Class</h3>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <label class="form-label">Topic</label>
+        <input type="text" name="topic" class="form-control"
+               value="{{ liveclass.topic }}" required>
+
+        <label class="form-label mt-3">Date</label>
+        <input type="date" name="date" class="form-control"
+               value="{{ liveclass.date|date:'Y-m-d' }}" required>
+
+        <label class="form-label mt-3">Time</label>
+        <input type="time" name="time" class="form-control"
+               value="{{ liveclass.time|time:'H:i' }}" required>
+
+        <label class="form-label mt-3">Meeting Link</label>
+        <input type="url" name="meeting_link" class="form-control"
+               value="{{ liveclass.meeting_link }}">
+
+        <button class="btn btn-primary mt-4">Save Changes</button>
+    </form>
+
+</div>
+{% endblock %}

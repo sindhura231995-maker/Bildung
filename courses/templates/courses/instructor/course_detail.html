@@ -1,6 +1,4 @@
-
 {% load static %}
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,95 +6,132 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Course details</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-
 </head>
+
 <body class="bg-light">
-  <div class="d-flex justify-content-between align-items-center p-3 bg-white shadow-sm">
+
+<div class="d-flex justify-content-between align-items-center p-3 bg-white shadow-sm">
     <a href="{% url 'instructor:instructor_dashboard' %}" class="text-decoration-none text-dark">
         <h3 class="m-0 fw-bold">Bildung</h3>
-    </a>  
+    </a>
 
-        <div class="dropdown">
-            <button class="btn rounded-circle shadow" style="background:gray;color:white;width:45px;height:45px;" type="button" data-bs-toggle="dropdown">
-                {{ request.user.username|first|upper }}
-            </button>
-            <ul class="dropdown-menu dropdown-menu-end">
-                <li><a class="dropdown-item" href="{% url 'instructor_profile_view' %}">Profile</a></li>
-                <li><a class="dropdown-item" href="{% url 'instructor:add_course' %}">Create New Course</a></li>
-                <li><a class="dropdown-item" href="{% url 'instructor:my_activity' %}">My Activity</a></li>
-                <li><a class="dropdown-item" href="{% url 'instructor:students_list' %}">My Students</a></li>
-                <li><a class="dropdown-item" href="{% url 'instructor:calendar_view' %}">My Schedules</a></li>
-                <li><a class="dropdown-item" href="{% url 'instructor:instructor_notifications' %}">Notifications</a></li>
-                <li><a class="dropdown-item" href="#">Earnings & Payments</a></li>
-                <li><a class="dropdown-item" href="#">Help & Support</a></li>
-                <li><a class="dropdown-item" href="{% url 'instructor:account_settings' %}">Account Settings</a></li>
-                <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item text-danger" href="{% url 'logout_view' %}">Logout</a></li>
-            </ul>
-        </div>
+    <div class="dropdown">
+        <button class="btn rounded-circle shadow"
+                style="background:gray;color:white;width:45px;height:45px;"
+                type="button" data-bs-toggle="dropdown">
+            {{ request.user.username|first|upper }}
+        </button>
+
+        <ul class="dropdown-menu dropdown-menu-end">
+            <li><a class="dropdown-item" href="{% url 'instructor_profile_view' %}">Profile</a></li>
+            <li><a class="dropdown-item" href="{% url 'instructor:add_course' %}">Create New Course</a></li>
+            <li><a class="dropdown-item" href="{% url 'instructor:students_list' %}">My Students</a></li>
+            <li><a class="dropdown-item" href="{% url 'instructor:calendar_view' %}">My Schedules</a></li>
+            <li><a class="dropdown-item" href="{% url 'instructor:instructor_notifications' %}">Notifications</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item text-danger" href="{% url 'logout_view' %}">Logout</a></li>
+        </ul>
     </div>
 </div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
 <div class="container py-5">
 
-  <!-- Course Header -->
-  <h2 class="fw-bold mb-4 text-primary">{{ course.title }}</h2>
+<h2 class="fw-bold mb-4 text-primary">{{ course.title }}</h2>
 
-  <!-- Course Overview -->
-  <div class="card shadow-sm border-0 mb-4 p-4 rounded-4">
-    <h5 class="mb-3 text-secondary">Course Overview</h5>
-    <div class="row">
-      <div class="col-md-8">
-        <p><strong>Instructor:</strong> {{ course.instructor.get_full_name|default:course.instructor.username }}</p>
-        <p><strong>Price:</strong> ₹{{ course.price }}</p>
-        <p><strong>Description:</strong></p>
-        <p class="text-muted">{{ course.description }}</p>
-      </div>
-      <div class="col-md-4 text-center">
-        {% if course.thumbnail %}
-          <img src="{{ course.thumbnail.url }}" class="img-fluid rounded-4 shadow-sm" alt="{{ course.title }}">
-        {% else %}
-          <img src="{% static 'images/default-course.png' %}" class="img-fluid rounded-4 shadow-sm" alt="No Image">
-        {% endif %}
-      </div>
-    </div>
-  </div>
+<div class="card shadow-sm border-0 mb-5 p-4 rounded-4">
+  <h5 class="mb-3 text-secondary">Course Overview</h5>
+  <p><strong>Instructor:</strong> {{ course.instructor.get_full_name|default:course.instructor.username }}</p>
+  <p><strong>Price:</strong> ₹{{ course.price }}</p>
+  <p><strong>Description:</strong></p>
+  <p class="text-muted">{{ course.description }}</p>
+</div>
 
-  <!-- Modules & Lectures -->
-  <div id="modulesContainer">
-    {% if course.modules.all %}
-      {% for module in course.modules.all %}
-        <div class="module mb-4">
-          <h4 class="fw-bold text-primary mb-3">Module {{ forloop.counter }}: {{ module.title }}</h4>
-          <p class="text-muted mb-3">{{ module.description|default:"No description provided." }}</p>
+<h3 class="fw-bold mb-4 text-primary">Course Content</h3>
 
-          <div class="row g-3">
-            {% if module.lectures.all %}
-              {% for lecture in module.lectures.all %}
-                <div class="col-md-3 col-sm-6">
-                  <div class="card h-100 shadow-sm rounded-4">
-                    {% if lecture.video %}
-                      <video controls width="100%" class="rounded-top">
-                        <source src="{{ lecture.video.url }}" type="video/mp4">
-                        Your browser does not support the video tag.
-                      </video>
-                    {% endif %}
-                    <div class="card-body text-center">
-                      <h6 class="card-title fw-bold mb-0">{{ lecture.title }}</h6>
-                    </div>
-                  </div>
-                </div>
-              {% endfor %}
-            {% else %}
-              <p class="text-muted">No lectures added for this module.</p>
+{% for item in ordered_items %}
+
+  {% if item.type == "module" %}
+    <div class="card rounded-4 shadow-sm mb-4 p-4">
+
+      <h4 class="fw-bold mb-1">
+        📘 {{ item.title }} — {{ item.obj.title }}
+      </h4>
+
+      <p class="text-muted">
+        {{ item.obj.description|default:"No description available." }}
+      </p>
+
+      <h6 class="fw-bold mt-3">Lectures</h6>
+
+<div class="row g-3">
+  {% if item.obj.lectures.all %}
+    {% for lecture in item.obj.lectures.all %}
+      <div class="col-md-3 col-sm-6">
+        <div class="card h-100 shadow-sm rounded-4">
+
+          {% if lecture.video %}
+            <video controls class="w-100 rounded-top">
+              <source src="{{ lecture.video.url }}" type="video/mp4">
+            </video>
+          {% else %}
+            <img src="{% static 'images/default-video.png' %}"
+                 class="img-fluid rounded-top"
+                 alt="No video uploaded">
+          {% endif %}
+
+          <div class="card-body text-center">
+            <h6 class="fw-bold mb-1">{{ lecture.title }}</h6>
+
+            {% if lecture.file %}
+              <a href="{{ lecture.file.url }}"
+                 class="btn btn-sm btn-outline-primary mt-2"
+                 download>
+                📄 Download
+              </a>
             {% endif %}
           </div>
+
         </div>
-      {% endfor %}
-    {% else %}
-      <p class="text-muted">No modules added for this course yet.</p>
-    {% endif %}
-  </div>
+      </div>
+    {% endfor %}
+  {% else %}
+    <p class="text-muted ps-3">No lectures added.</p>
+  {% endif %}
+</div>
+
+    </div>
+  {% endif %}
+
+  {% if item.type == "quiz" %}
+    <div class="card shadow-sm rounded-4 mb-4 p-4 border-warning">
+      <h5 class="fw-bold text-warning mb-0">
+        📝 {{ item.title }}
+      </h5>
+    </div>
+  {% endif %}
+
+  {% if item.type == "assignment" %}
+    <div class="card shadow-sm rounded-4 mb-4 p-4 border-info">
+      <h5 class="fw-bold text-info mb-0">
+        📂 {{ item.title }} — {{ item.obj.title }}
+      </h5>
+    </div>
+  {% endif %}
+
+  {% if item.type == "live" %}
+    <div class="card shadow-sm rounded-4 mb-4 p-4 border-success">
+      <h5 class="fw-bold text-success mb-0">
+        🎥 {{ item.title }} — {{ item.obj.topic }}
+      </h5>
+    </div>
+  {% endif %}
+
+{% empty %}
+  <p class="text-muted">No course content added.</p>
+{% endfor %}
+
 </div>
 </body>
 </html>

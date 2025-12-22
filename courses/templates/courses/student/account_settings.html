@@ -4,88 +4,41 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Account Settings</title>
+
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        .settings-container {
-            max-width: 1000px;
-            margin: 0 auto;
-        }
-        .settings-card {
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-            border: none;
-        }
-        .settings-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px 0;
-            border-radius: 10px 10px 0 0;
-        }
-        .profile-picture {
-            width: 150px;
-            height: 150px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 5px solid white;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        }
-        .nav-pills .nav-link {
-            color: #495057;
-            padding: 12px 20px;
-            margin: 5px 0;
-            border-radius: 8px;
-            transition: all 0.3s ease;
-        }
-        .nav-pills .nav-link.active {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-        .nav-pills .nav-link:hover:not(.active) {
-            background-color: #f8f9fa;
-        }
-        .form-control:focus {
-            border-color: #667eea;
-            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
-        }
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: none;
-        }
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-        }
-        .settings-section {
-            padding: 30px;
-        }
-        .danger-zone {
-            border-left: 4px solid #dc3545;
-            background-color: #f8f9fa;
-        }
-    </style>
 
+<style>
+    .settings-container { max-width: 1000px; margin: auto; }
+    .settings-card { background: white; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom:20px; }
+    .settings-header { background: linear-gradient(135deg,#667eea,#764ba2); color:white; padding:30px 0; border-radius:10px 10px 0 0; }
+    .profile-picture { width:150px; height:150px; border-radius:50%; object-fit:cover; border:5px solid white; box-shadow:0 4px 15px rgba(0,0,0,0.2); }
+    .nav-pills .nav-link.active { background: linear-gradient(135deg,#667eea,#764ba2); color:white; }
+    .settings-section { padding:30px; }
+</style>
 </head>
+
 <body class="bg-light">
 
+<!-- HEADER SECTION -->
 <div class="d-flex justify-content-between align-items-center p-3 bg-white shadow-sm">
     <a href="{% url 'student_dashboard' %}" class="text-decoration-none text-dark">
-        <h3 class="m-0 fw-bold">Bildung</h3>
+        <h3 class="fw-bold m-0">Bildung</h3>
     </a>
 
     <div class="d-flex align-items-center gap-3">
-        <h4 class="m-0">Hello, {{ user.first_name }} {{ user.last_name }} </h4>
+        <h5 class="m-0">Hello, {{ user.first_name }} {{ user.last_name }}</h5>
+
         <div class="dropdown">
-            <button class="btn rounded-circle shadow" style="background:gray;color:white;width:45px;height:45px;" type="button" data-bs-toggle="dropdown">
-                {{ request.user.username|first|upper }}
+            <button class="btn rounded-circle shadow" style="background:gray;color:white;width:45px;height:45px;" data-bs-toggle="dropdown">
+                {{ user.username|first|upper }}
             </button>
+
             <ul class="dropdown-menu dropdown-menu-end">
                 <li><a class="dropdown-item" href="{% url 'profile_view' %}">Profile</a></li>
                 <li><a class="dropdown-item" href="{% url 'student:my_courses' %}">My Courses</a></li>
-                <li><a class="dropdown-item" href="{% url 'student:student_upcoming_classes' %}">My_schedules</a></li>
                 <li><a class="dropdown-item" href="{% url 'student:student_my_activity' %}">My activity</a></li>
+                <li><a class="dropdown-item" href="{% url 'student:student_upcoming_classes' %}">My_schedules</a></li>
                 <li><a class="dropdown-item" href="{% url 'student:my_certificates' %}">My Certificates</a></li>
                 <li><a class="dropdown-item" href="{% url 'student:student_notifications' %}">Notifications</a></li>
                 <li><a class="dropdown-item" href="#">Payments</a></li>
@@ -101,283 +54,194 @@
 
 <div class="container py-4">
 
-    <!-- Settings Header -->
-    <div class="settings-header">
-        <div class="container text-center">
-            <h1><i class="fas fa-cog me-2"></i>Account Settings</h1>
-            <p class="lead">Manage your account preferences and security</p>
-        </div>
+    <div class="settings-header text-center">
+        <h1><i class="fas fa-cog"></i> Account Settings</h1>
+        <p>Manage your personal information, security, and privacy</p>
     </div>
 
-    <div class="container settings-container my-5">
+    <div class="settings-container my-5">
         <div class="row">
-            <!-- Sidebar Navigation -->
-            <div class="col-md-3 mb-4">
+
+            <div class="col-md-3">
                 <div class="settings-card">
                     <div class="settings-section">
-                        <div class="nav flex-column nav-pills" id="v-pills-tab" role="tablist">
-                            <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#profile" type="button">
-                                <i class="fas fa-user me-2"></i>Profile
-                            </button>
-                            <button class="nav-link" data-bs-toggle="pill" data-bs-target="#security" type="button">
-                                <i class="fas fa-shield-alt me-2"></i>Security
-                            </button>
-                            <button class="nav-link" data-bs-toggle="pill" data-bs-target="#notifications" type="button">
-                                <i class="fas fa-bell me-2"></i>Notifications
-                            </button>
-                            <button class="nav-link" data-bs-toggle="pill" data-bs-target="#privacy" type="button">
-                                <i class="fas fa-lock me-2"></i>Privacy
-                            </button>
+                        <div class="nav flex-column nav-pills">
+                            <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#profile">Profile</button>
+                            <button class="nav-link" data-bs-toggle="pill" data-bs-target="#security">Security</button>
+                            <button class="nav-link" data-bs-toggle="pill" data-bs-target="#notifications">Notifications</button>
+                            <button class="nav-link" data-bs-toggle="pill" data-bs-target="#privacy">Privacy</button>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Content Area -->
+            <!-- RIGHT CONTENT -->
             <div class="col-md-9">
-                <!-- Messages -->
-                {% if messages %}
-                <div class="mb-4">
-                    {% for message in messages %}
-                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                    {% endfor %}
-                </div>
-                {% endif %}
 
-                <div class="tab-content" id="v-pills-tabContent">
-                    <!-- Profile Tab -->
+                <div class="tab-content">
+
                     <div class="tab-pane fade show active" id="profile">
-                        <div class="settings-card">
-                            <div class="settings-section">
-                                <h4 class="mb-4"><i class="fas fa-user me-2"></i>Profile Information</h4>
-                                <form method="post" enctype="multipart/form-data">
-                                    {% csrf_token %}
-                                    <div class="text-center mb-4">
-                                        <img src="{{ profile.profile_picture.url|default:'https://via.placeholder.com/150?text=Profile' }}" 
-                                             class="profile-picture mb-3" alt="Profile Picture">
-                                        <div>
-                                            <input type="file" class="form-control d-none" id="profile_picture" name="profile_picture" accept="image/*">
-                                            <label for="profile_picture" class="btn btn-outline-primary btn-sm">
-                                                <i class="fas fa-camera me-1"></i>Change Photo
-                                            </label>
-                                        </div>
+                        <div class="settings-card"><div class="settings-section">
+                            
+                            <h4 class="mb-4">Profile Information</h4>
+
+                            <form method="post" enctype="multipart/form-data">
+                                {% csrf_token %}
+
+                                <div class="text-center mb-4">
+                                    {% if profile.profile_picture %}
+                                        <img src="{{ profile.profile_picture.url }}" class="profile-picture">
+                                    {% else %}
+                                        <img src="https://via.placeholder.com/150?text=Profile" class="profile-picture">
+                                    {% endif %}
+
+                                    <br>
+                                    <label for="profile_picture" class="btn btn-outline-primary btn-sm mt-2">
+                                        Change Photo
+                                    </label>
+                                    <input type="file" id="profile_picture" name="profile_picture" class="d-none">
+                                </div>
+
+                                <!-- User Info -->
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label>First Name</label>
+                                        <input type="text" name="first_name" class="form-control" value="{{ user.first_name }}">
                                     </div>
-                                    
-                                    <div class="row">
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label">First Name</label>
-                                            <input type="text" class="form-control" name="first_name" value="{{ user.first_name }}" required>
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label">Last Name</label>
-                                            <input type="text" class="form-control" name="last_name" value="{{ user.last_name }}" required>
-                                        </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label>Last Name</label>
+                                        <input type="text" name="last_name" class="form-control" value="{{ user.last_name }}">
                                     </div>
-                                    
-                                    <div class="mb-3">
-                                        <label class="form-label">Email Address</label>
-                                        <input type="email" class="form-control" name="email" value="{{ user.email }}" required>
-                                    </div>
-                                    
-                                    <div class="mb-3">
-                                        <label class="form-label">Phone Number</label>
-                                        <input type="tel" class="form-control" name="phone" value="{{ profile.phone|default:'' }}">
-                                    </div>
-                                    
-                                    <div class="mb-3">
-                                        <label class="form-label">Bio</label>
-                                        <textarea class="form-control" name="bio" rows="4" placeholder="Tell us about yourself...">{{ profile.bio|default:'' }}</textarea>
-                                    </div>
-                                    
-                                    <button type="submit" name="update_profile" class="btn btn-primary">
-                                        <i class="fas fa-save me-1"></i>Save Changes
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label>Email</label>
+                                    <input type="email" name="email" class="form-control" value="{{ user.email }}">
+                                </div>
+
+                                <div class="mb-3">
+                                    <label>Phone Number</label>
+                                    <input type="text" name="phone" class="form-control" value="{{ profile.phone }}">
+                                </div>
+
+                                <div class="mb-3">
+                                    <label>About Me</label>
+                                    <textarea name="about_me" class="form-control" rows="4">{{ profile.about_me }}</textarea>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label>Gender</label>
+                                    <select name="gender" class="form-control">
+                                        <option value="">Select</option>
+                                        <option value="M" {% if profile.gender == "M" %}selected{% endif %}>Male</option>
+                                        <option value="F" {% if profile.gender == "F" %}selected{% endif %}>Female</option>
+                                        <option value="O" {% if profile.gender == "O" %}selected{% endif %}>Other</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label>Date of Birth</label>
+                                    <input type="date" name="date_of_birth" class="form-control" 
+                                           value="{{ profile.date_of_birth|date:'Y-m-d' }}">
+                                </div>
+
+                                <div class="mb-3">
+                                    <label>Qualification</label>
+                                    <input type="text" name="qualification" class="form-control" value="{{ profile.qualification }}">
+                                </div>
+
+                                <div class="mb-3">
+                                    <label>Resume (PDF)</label><br>
+                                    {% if profile.resume %}
+                                        <a href="{{ profile.resume.url }}" target="_blank">View Existing Resume</a><br>
+                                    {% endif %}
+                                    <input type="file" name="resume" accept="application/pdf" class="form-control mt-2">
+                                </div>
+
+                                <button type="submit" name="update_profile" class="btn btn-primary">Save Changes</button>
+                            </form>
+
+                        </div></div>
                     </div>
 
-                    <!-- Security Tab -->
+                    <!-- SECURITY TAB -->
                     <div class="tab-pane fade" id="security">
-                        <div class="settings-card">
-                            <div class="settings-section">
-                                <h4 class="mb-4"><i class="fas fa-shield-alt me-2"></i>Security Settings</h4>
-                                <form method="post">
-                                    {% csrf_token %}
-                                    <h5 class="mb-3">Change Password</h5>
-                                    <div class="mb-3">
-                                        <label class="form-label">Current Password</label>
-                                        <input type="password" class="form-control" name="old_password" required>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">New Password</label>
-                                        <input type="password" class="form-control" name="new_password1" required>
-                                        <div class="form-text">Password must be at least 8 characters long.</div>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">Confirm New Password</label>
-                                        <input type="password" class="form-control" name="new_password2" required>
-                                    </div>
-                                    <button type="submit" name="change_password" class="btn btn-primary">
-                                        <i class="fas fa-key me-1"></i>Update Password
-                                    </button>
-                                </form>
-                                
-                                <hr class="my-4">
-                                
-                                <div class="danger-zone p-3 rounded">
-                                    <h5 class="text-danger mb-3"><i class="fas fa-exclamation-triangle me-2"></i>Danger Zone</h5>
-                                    <p class="text-muted mb-3">Once you delete your account, there is no going back. Please be certain.</p>
-                                    <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteAccountModal">
-                                        <i class="fas fa-trash me-1"></i>Delete Account
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
+                        <div class="settings-card"><div class="settings-section">
+                            
+                            <h4 class="mb-4">Change Password</h4>
+
+                            <form method="post">
+                                {% csrf_token %}
+
+                                <label>Current Password</label>
+                                <input type="password" name="old_password" class="form-control mb-3">
+
+                                <label>New Password</label>
+                                <input type="password" name="new_password1" class="form-control mb-3">
+
+                                <label>Confirm New Password</label>
+                                <input type="password" name="new_password2" class="form-control mb-3">
+
+                                <button type="submit" name="change_password" class="btn btn-primary">Update Password</button>
+                            </form>
+
+                        </div></div>
                     </div>
 
-                    <!-- Notifications Tab -->
+                    <!-- NOTIFICATION TAB -->
                     <div class="tab-pane fade" id="notifications">
-                        <div class="settings-card">
-                            <div class="settings-section">
-                                <h4 class="mb-4"><i class="fas fa-bell me-2"></i>Notification Preferences</h4>
-                                <form method="post">
-                                    {% csrf_token %}
-                                    <div class="mb-3">
-                                        <div class="form-check form-switch">
-                                            <input class="form-check-input" type="checkbox" name="email_notifications" id="email_notifications" checked>
-                                            <label class="form-check-label" for="email_notifications">
-                                                Email Notifications
-                                            </label>
-                                        </div>
-                                        <div class="form-text">Receive important updates via email</div>
-                                    </div>
-                                    
-                                    <div class="mb-3">
-                                        <div class="form-check form-switch">
-                                            <input class="form-check-input" type="checkbox" name="course_updates" id="course_updates" checked>
-                                            <label class="form-check-label" for="course_updates">
-                                                Course Updates
-                                            </label>
-                                        </div>
-                                        <div class="form-text">Get notified about new content in your enrolled courses</div>
-                                    </div>
-                                    
-                                    <div class="mb-3">
-                                        <div class="form-check form-switch">
-                                            <input class="form-check-input" type="checkbox" id="promotional_emails" checked>
-                                            <label class="form-check-label" for="promotional_emails">
-                                                Promotional Emails
-                                            </label>
-                                        </div>
-                                        <div class="form-text">Receive offers and promotional content</div>
-                                    </div>
-                                    
-                                    <button type="submit" name="update_notifications" class="btn btn-primary">
-                                        <i class="fas fa-save me-1"></i>Save Preferences
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
+                        <div class="settings-card"><div class="settings-section">
+                            
+                            <h4>Notification Preferences</h4>
+
+                            <form method="post">
+                                {% csrf_token %}
+
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" name="email_notifications" checked>
+                                    <label>Email Notifications</label>
+                                </div>
+
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" name="course_updates" checked>
+                                    <label>Course Updates</label>
+                                </div>
+
+                                <button type="submit" name="update_notifications" class="btn btn-primary">Save Preferences</button>
+                            </form>
+
+                        </div></div>
                     </div>
 
-                    <!-- Privacy Tab -->
+                    <!-- PRIVACY TAB -->
                     <div class="tab-pane fade" id="privacy">
-                        <div class="settings-card">
-                            <div class="settings-section">
-                                <h4 class="mb-4"><i class="fas fa-lock me-2"></i>Privacy Settings</h4>
-                                <div class="mb-4">
-                                    <h5>Data Privacy</h5>
-                                    <p class="text-muted">Control how your data is used and shared.</p>
-                                    <div class="form-check form-switch mb-3">
-                                        <input class="form-check-input" type="checkbox" id="data_collection" checked>
-                                        <label class="form-check-label" for="data_collection">
-                                            Allow data collection for personalized experience
-                                        </label>
-                                    </div>
-                                    <div class="form-check form-switch mb-3">
-                                        <input class="form-check-input" type="checkbox" id="third_party_sharing">
-                                        <label class="form-check-label" for="third_party_sharing">
-                                            Share data with third-party partners
-                                        </label>
-                                    </div>
-                                </div>
-                                
-                                <div class="mb-4">
-                                    <h5>Profile Visibility</h5>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="profile_visibility" id="public" checked>
-                                        <label class="form-check-label" for="public">
-                                            Public - Anyone can see my profile
-                                        </label>
-                                    </div>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="profile_visibility" id="private">
-                                        <label class="form-check-label" for="private">
-                                            Private - Only I can see my profile
-                                        </label>
-                                    </div>
-                                </div>
-                                
-                                <button class="btn btn-primary">
-                                    <i class="fas fa-save me-1"></i>Save Privacy Settings
-                                </button>
-                            </div>
-                        </div>
+                        <div class="settings-card"><div class="settings-section">
+                            <h4>Privacy Settings</h4>
+                            <p class="text-muted">More features coming soon...</p>
+                        </div></div>
                     </div>
+
                 </div>
             </div>
+
         </div>
     </div>
 
-    <!-- Delete Account Modal -->
-    <div class="modal fade" id="deleteAccountModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title text-danger"><i class="fas fa-exclamation-triangle me-2"></i>Delete Account</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <p>Are you sure you want to delete your account? This action cannot be undone.</p>
-                    <p class="text-danger"><strong>Warning:</strong> All your data, including courses, progress, and certificates will be permanently lost.</p>
-                    <div class="form-check mb-3">
-                        <input class="form-check-input" type="checkbox" id="confirmDelete">
-                        <label class="form-check-label" for="confirmDelete">
-                            I understand that this action is irreversible
-                        </label>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-danger" disabled id="deleteAccountBtn">
-                        <i class="fas fa-trash me-1"></i>Delete Account
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
+</div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Enable delete button only when checkbox is checked
-        document.getElementById('confirmDelete').addEventListener('change', function() {
-            document.getElementById('deleteAccountBtn').disabled = !this.checked;
-        });
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-        // Profile picture preview
-        document.getElementById('profile_picture').addEventListener('change', function(e) {
-            if (e.target.files && e.target.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    document.querySelector('.profile-picture').src = e.target.result;
-                }
-                reader.readAsDataURL(e.target.files[0]);
-            }
-        });
-    </script>
+<script>
+document.getElementById("profile_picture").addEventListener("change", function(e){
+    if (e.target.files.length > 0) {
+        let reader = new FileReader();
+        reader.onload = function(e) {
+            document.querySelector(".profile-picture").src = e.target.result;
+        }
+        reader.readAsDataURL(e.target.files[0]);
+    }
+});
+</script>
+
 </body>
 </html>

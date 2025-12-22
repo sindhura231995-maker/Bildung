@@ -3,6 +3,7 @@ from users.models import User
 from django.conf import settings
 from django.utils import timezone
 import datetime
+import uuid
 
 
 class Course(models.Model):
@@ -20,15 +21,13 @@ class Course(models.Model):
     title = models.CharField(max_length=255)
     description = models.TextField()
     price = models.DecimalField(max_digits=8, decimal_places=2, default=0)
-
-    # Keep the new category field
     category = models.CharField(
         max_length=50, choices=CATEGORY_CHOICES, default='programming'
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
+    structure_json = models.JSONField(default=dict)
 
-    # students enrolled
     students = models.ManyToManyField(
         settings.AUTH_USER_MODEL, related_name="enrolled_courses", blank=True
     )
@@ -38,16 +37,30 @@ class Course(models.Model):
 
 
 class Module(models.Model):
-    course = models.ForeignKey(
-        Course, related_name='modules', on_delete=models.CASCADE
-    )
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, null=True, blank=True, related_name='modules')
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
+    order = models.PositiveIntegerField(default=0)
 
     def __str__(self):
         return f"{self.course.title} - {self.title}"
 
+class CourseBlock(models.Model):
+    BLOCK_TYPES = [
+        ("Module", "Module"),
+        ("Quiz", "Quiz"),
+        ("Assignment", "Assignment"),
+        ("Live Class", "Live Class"),
+    ]
 
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)
+    type = models.CharField(max_length=50, choices=BLOCK_TYPES)
+    title = models.CharField(max_length=255, blank=True)
+    order = models.IntegerField(default=0)
+
+    def __str__(self):
+        return f"{self.type} - {self.title or 'Untitled'}"
+    
 class Lecture(models.Model):
     module = models.ForeignKey(
         Module, on_delete=models.CASCADE, related_name="lectures"
@@ -55,6 +68,8 @@ class Lecture(models.Model):
     title = models.CharField(max_length=255)
     video = models.FileField(upload_to="lectures/videos/", blank=True, null=True)
     file = models.FileField(upload_to="lectures/files/", blank=True, null=True)
+    order = models.PositiveIntegerField(default=0)
+
 
     def __str__(self):
         return f"{self.module.title} - {self.title}"
@@ -118,7 +133,7 @@ class CourseEvent(models.Model):
 
     def __str__(self):
         return f"{self.course.title} - {self.title} ({self.start_time})"
-import uuid
+
 
 class Certificate(models.Model):
     student = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
@@ -133,7 +148,6 @@ class Certificate(models.Model):
     class Meta:
         unique_together = ('student', 'course')
 
-        
 class LiveClass(models.Model):
     instructor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='instructor_classes')
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='live_classes')
@@ -143,6 +157,7 @@ class LiveClass(models.Model):
     time = models.TimeField()
     created_at = models.DateTimeField(auto_now_add=True)
     reminder_sent = models.BooleanField(default=False)
+    order = models.PositiveIntegerField(default=0)
 
     @property
     def start_datetime(self):
@@ -189,7 +204,7 @@ class QuestionReply(models.Model):
 class CourseReview(models.Model):
     course = models.ForeignKey("courses.Course", on_delete=models.CASCADE, related_name="reviews")
     student = models.ForeignKey(User, on_delete=models.CASCADE, related_name="course_reviews")
-    rating = models.IntegerField(default=5)   
+    rating = models.IntegerField(default=5)
     comment = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -214,3 +229,11 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.message[:30]}"
+    
+class Assignment(models.Model):
+    course = models.ForeignKey(Course, related_name="assignments", on_delete=models.CASCADE)
+    title = models.CharField(max_length=255)
+    order = models.PositiveIntegerField(default=0)
+
+    def __str__(self):
+        return f"{self.course.title} - Assignment: {self.title}"

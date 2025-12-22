@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4">
+
+    <h3>Edit Event</h3>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <label class="form-label">Title</label>
+        <input type="text" name="title" class="form-control"
+               value="{{ event.title }}" required>
+
+        <label class="form-label mt-3">Description</label>
+        <textarea name="description" class="form-control"
+                  rows="4">{{ event.description }}</textarea>
+
+        <label class="form-label mt-3">Start Date & Time</label>
+        <input type="datetime-local" name="start_time" class="form-control"
+               value="{{ event.start_time|date:'Y-m-d\TH:i' }}" required>
+
+        <label class="form-label mt-3">End Date & Time</label>
+        <input type="datetime-local" name="end_time" class="form-control"
+               value="{{ event.end_time|date:'Y-m-d\TH:i' }}" required>
+
+        <button class="btn btn-primary mt-4">Save Changes</button>
+    </form>
+
+</div>
+{% endblock %}

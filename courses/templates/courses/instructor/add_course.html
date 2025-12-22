@@ -3,99 +3,212 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Course</title>
 
-    <title>Add New Course</title>
+    <link rel="stylesheet" href="{% static 'css/add_course.css' %}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
-    <link rel="stylesheet" href="{% static 'module_builder/add_new_course.css' %}">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <script>
+        const BASE_URL = "/instructor";
+        const COURSE_ID = "{{ course_id }}";
+        const PRELOAD = {{ preload|safe }};
+    </script>
+
+<style>
+
+.topbar {
+    background: white;
+    padding: 12px 25px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.topbar-title {
+    font-size: 26px;
+    font-weight: bold;
+    text-decoration: none;
+    color: #222;
+}
+
+#topRow {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 18px;
+    margin-top: 30px;
+}
+
+
+
+.builder-card {
+    width: 180px;
+    height: 160px;
+    background: #ffffff;
+    border-radius: 18px;
+    border: 3px dashed #dcdcdc;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+    transition: 0.25s ease;
+    cursor: grab;
+}
+
+.builder-card:hover {
+    transform: scale(1.05);
+}
+
+#dropZone {
+    margin-bottom: 30px;   
+}
+
+
+.card-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+
+.module-card { border-color: #6aa9ff !important; }
+.quiz-card { border-color: #ffcf7d !important; }
+.assignment-card { border-color: #7ee6a0 !important; }
+.liveclass-card { border-color: #ff8fba !important; }
+
+.card-actions {
+    position: absolute;
+    bottom: 12px;
+    display: flex;
+    gap: 10px;
+}
+
+.open-module-btn {
+    background: #4caf50;
+    color: white;
+    border: none;
+    padding: 5px 12px;
+    font-size: 13px;
+    border-radius: 6px;
+}
+
+.delete-module-btn {
+    background: #ff4d4d;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    font-size: 13px;
+    border-radius: 6px;
+}
+
+.drop-zone {
+    width: 180px;
+    height: 160px;
+    border-radius: 18px;
+    border: 3px dashed #bfc7e6;
+    background: #eef2ff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 40px;
+    font-weight: bold;
+    color: #5b6cff;
+    cursor: pointer;
+    transition: 0.25s ease;
+}
+
+.drop-zone:hover {
+    transform: scale(1.08);
+    border-color: #5167ff;
+    color: #5167ff;
+}
+
+</style>
+
 </head>
 
-<body>
 
-<div class="main-container">
+<body class="bg-light">
 
-    <!-- FORM START -->
-    <form method="POST" enctype="multipart/form-data">
-        {% csrf_token %}
 
-        <!-- LEFT SECTION -->
-        <div class="course-box">
-            <h2>Add New Course</h2>
+<div class="topbar">
+    <a href="{% url 'instructor:instructor_dashboard' %}" class="topbar-title">Bildung</a>
 
-            <label>Course Title:</label>
-            <input type="text" name="title" placeholder="Enter course title" required>
+    <div class="dropdown">
+        <button class="btn rounded-circle shadow"
+                style="background:#666;color:white;width:45px;height:45px;"
+                data-bs-toggle="dropdown">
+            {{ request.user.username|first|upper }}
+        </button>
 
-            <label>Description:</label>
-            <textarea name="description" placeholder="Enter course description" required></textarea>
+        <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" href="{% url 'instructor_profile_view' %}">Profile</a></li>
+                <li><a class="dropdown-item" href="{% url 'instructor:add_course' %}">Create New Course</a></li>
+                <li><a class="dropdown-item" href="{% url 'instructor:students_list' %}">My Students</a></li>
+                <li><a class="dropdown-item" href="{% url 'instructor:calendar_view' %}">My Schedules</a></li>
+                <li><a class="dropdown-item" href="{% url 'instructor:instructor_notifications' %}">Notifications</a></li>
+                <li><a class="dropdown-item" href="#">Earnings & Payments</a></li>
+                <li><a class="dropdown-item" href="#">Help & Support</a></li>
+                <li><a class="dropdown-item" href="{% url 'instructor:account_settings' %}">Account Settings</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item text-danger" href="{% url 'logout_view' %}">Logout</a></li>
+        </ul>
+    </div>
+</div>
 
-            <label>Price:</label>
-            <input type="number" name="price" placeholder="Enter price" required>
+<div class="paper">
 
-            <!-- CATEGORY -->
-            <label class="form-label fw-bold">Category:</label>
-            <select name="category" id="categorySelect" class="form-control" required>
-                <option value="" disabled selected>Select Category</option>
-                <option value="business">Business</option>
-                <option value="design">Design</option>
-                <option value="music">Music</option>
-                <option value="programming">Programming</option>
-                <option value="others">Others</option>
-            </select>
+    <h1 class="title">CREATE COURSE</h1>
 
-            <!-- OTHER CATEGORY FIELD -->
-            <div id="otherCategoryDiv" class="mt-3" style="display:none;">
-                <label class="fw-bold">Enter Other Category:</label>
-                <input
-                    type="text"
-                    id="otherCategoryInput"
-                    name="other_category"
-                    class="form-control"
-                    placeholder="Type your category here"
-                />
-            </div>
+    <label class="label">Course Title</label>
+    <input id="courseTitle" class="input-box" value="{{ course_title }}">
+
+    <label class="label">Description</label>
+    <textarea id="courseDescription" class="input-box" style="height:80px;">{{ course_description }}</textarea>
+
+    <label class="label">Price (₹)</label>
+    <input id="coursePrice" type="number" class="input-box" value="{{ course_price }}">
+
+    <label class="label">Category</label>
+    <select id="courseCategory" class="input-box">
+    <option value="" disabled selected>Select Category</option>
+        <option value="business" {% if course_category == 'business' %}selected{% endif %}>Business</option>
+        <option value="design" {% if course_category == 'design' %}selected{% endif %}>Design</option>
+        <option value="music" {% if course_category == 'music' %}selected{% endif %}>Music</option>
+        <option value="programming" {% if course_category == 'programming' %}selected{% endif %}>Programming</option>
+        <option value="others" {% if course_category == 'others' %}selected{% endif %}>Others</option>
+    </select>
+
+    <hr class="divider">
+
+    <h1 class="title">MODULE BUILDER</h1>
+
+    <div id="topRow"></div>
+
+    <div class="bottom-area">
+
+        <div class="drag-row">
+            <div class="draggable-btn module-btn" draggable="true" data-type="Module">Module</div>
+            <div class="draggable-btn quiz-btn" draggable="true" data-type="Quiz">Quiz</div>
+            <div class="draggable-btn assignment-btn" draggable="true" data-type="Assignment">Assignment</div>
+            <div class="draggable-btn liveclass-btn" draggable="true" data-type="Live Class">Live Class</div>
         </div>
 
-        <!-- MODULE SECTION -->
-        <div class="module-box">
-            <h2>Modules</h2>
-
-            <label>Module Title:</label>
-            <input type="text" name="module_title" placeholder="Enter module title">
-
-            <label>Description:</label>
-            <textarea name="module_description" placeholder="Enter module description"></textarea>
-
-            <div>
-                <button id="btnAddLecture" type="button" class="btn-lecture">+ Add Lecture</button><br>
-                <button id="btnSaveModule" type="button" class="btn-savemodule">Save Module</button>
-            </div>
+        <div class="actions">
+            <button class="save-main" onclick="saveCourse()">Save Course</button>
+            <button class="publish-main" onclick="publishCourse()">Publish</button>
         </div>
 
-        <!-- SAVE BUTTON -->
-        <div class="button-row">
-            <button id="btnAddModule" type="button" class="btn-module">+ Add Module</button><br>
-            <button id="btnSaveCourse" type="submit" class="btn-save">Save Course</button>
-        </div>
-
-    </form>
-    <!-- FORM END -->
+        <div class="note">💡 Drag items onto the + box to add them</div>
+    </div>
 
 </div>
 
-<script>
-    // Show custom category input
-    document.getElementById("categorySelect").addEventListener("change", function () {
-        const otherDiv = document.getElementById("otherCategoryDiv");
-
-        if (this.value === "others") {
-            otherDiv.style.display = "block";
-        } else {
-            otherDiv.style.display = "none";
-            document.getElementById("otherCategoryInput").value = "";
-        }
-    });
-</script>
+<script src="{% static 'js/add_course.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>

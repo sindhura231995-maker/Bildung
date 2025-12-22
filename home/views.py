@@ -13,7 +13,7 @@ def smart_home(request):
     )
 
     popular_titles = list(popular_titles_qs)
-    print("Popular courses queryset:", popular_titles)
+    #print("Popular courses queryset:", popular_titles)
 
     courses = Course.objects.all()[:6]
     if request.user.is_authenticated:

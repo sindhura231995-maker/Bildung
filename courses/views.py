@@ -3,10 +3,12 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse
 from django.utils.dateparse import parse_datetime, parse_date, parse_time
+from django.views.decorators.csrf import csrf_exempt
 
-from quizzes.models import QuizResult
-from .models import Course, Enrollment, Lecture, LectureProgress, Feedback, CourseEvent, Module, Certificate,LiveClass, LectureQuestion, QuestionReply, CourseReview, LiveClassAttendance, Notification
-from users.models import LoginHistory, User
+from courses.utils import check_and_send_reminders
+from quizzes.models import Quiz, QuizResult
+from .models import Assignment, Course, CourseBlock, Enrollment, Lecture, LectureProgress, Feedback, CourseEvent, Module, Certificate,LiveClass, LectureQuestion, QuestionReply, CourseReview, LiveClassAttendance, Notification
+from users.models import InstructorProfile, LoginHistory, User
 from .forms import CourseForm, LectureForm, FeedbackForm, ModuleFormSet, LiveClassForm, CourseReviewForm, CourseEventForm
 from io import BytesIO
 from users.decorators import instructor_required
@@ -15,11 +17,10 @@ from users.models import Profile
 from datetime import date, datetime
 from django.utils import timezone
 
-
 from io import BytesIO
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
-from django.http import FileResponse, HttpResponseForbidden
+from django.http import FileResponse, HttpResponse, HttpResponseForbidden
 import json
 from django.contrib.auth import update_session_auth_hash
 
@@ -78,52 +79,108 @@ def my_courses(request):
         "enrolled_courses": enrolled_courses
     })
 
-@login_required(login_url='/student/login/')
+@login_required(login_url="/student/login/")
 def student_course_detail(request, course_id):
-    enrollment = get_object_or_404(Enrollment, course_id=course_id, student=request.user)
+
+    enrollment = get_object_or_404(
+        Enrollment,
+        course_id=course_id,
+        student=request.user
+    )
     course = enrollment.course
-    modules = course.modules.prefetch_related('lectures').all()
+
+    structure = course.structure_json or []
+
+    modules_map = {
+        m.id: m for m in
+        course.modules.prefetch_related("lectures").all()
+    }
+    quizzes_map = {q.id: q for q in course.quizzes.all()}
+    assignments_map = {a.id: a for a in course.assignments.all()}
     lectures = Lecture.objects.filter(module__course=course)
     total = lectures.count()
-    completed_lectures = LectureProgress.objects.filter(
-        student=request.user,
-        lecture__in=lectures,
-        completed=True
-    ).values_list('lecture_id', flat=True)
+
+    completed_lectures = set(
+        LectureProgress.objects.filter(
+            student=request.user,
+            lecture__in=lectures,
+            completed=True
+        ).values_list("lecture_id", flat=True)
+    )
 
     completed = len(completed_lectures)
-    progress_map = set(completed_lectures)
     progress_percent = int((completed / total * 100) if total else 0)
-
     unlocked_modules = []
     all_previous_complete = True
-    try:
-        user_review = CourseReview.objects.get(course=course, student=request.user)
-    except CourseReview.DoesNotExist:
-        user_review = None
-    for module in modules:
+
+    for module in modules_map.values():
         if all_previous_complete:
             unlocked_modules.append(module.id)
-        else:
-            continue
 
         module_lectures = module.lectures.all()
-        module_complete = all(l.id in completed_lectures for l in module_lectures)
-        if not module_complete:
+        if not all(l.id in completed_lectures for l in module_lectures):
             all_previous_complete = False
 
-    return render(request, 'courses/student_course_detail.html', {
-        'course': course,
-        'modules': modules,
-        'lectures': lectures,
-        'total': total,
-        'completed': completed,
-        'progress_map': progress_map,
-        'progress_percent': progress_percent,
-        'unlocked_modules': unlocked_modules,
-        "user_review": user_review,
-    })
+    ordered_items = []
+    module_count = 1
+    quiz_count = 1
+    assignment_count = 1
 
+    for item in structure:
+        item_type = item.get("type")
+
+        if item_type == "Module":
+            module = modules_map.get(item.get("module_id"))
+            if module:
+                ordered_items.append({
+                    "type": "module",
+                    "title": f"Module {module_count}",
+                    "obj": module
+                })
+                module_count += 1
+
+        elif item_type == "Quiz":
+            quiz = quizzes_map.get(item.get("quiz_id"))
+            if quiz:
+                ordered_items.append({
+                    "type": "quiz",
+                    "title": f"Quiz {quiz_count}",
+                    "obj": quiz
+                })
+                quiz_count += 1
+
+        elif item_type == "Assignment":
+            assignment = assignments_map.get(item.get("assignment_id"))
+            if assignment:
+                ordered_items.append({
+                    "type": "assignment",
+                    "title": f"Assignment {assignment_count}",
+                    "obj": assignment
+                })
+                assignment_count += 1
+
+    try:
+        user_review = CourseReview.objects.get(
+            course=course,
+            student=request.user
+        )
+    except CourseReview.DoesNotExist:
+        user_review = None
+
+    return render(
+        request,
+        "courses/student_course_detail.html",
+        {
+            "course": course,
+            "ordered_items": ordered_items,
+            "progress_map": completed_lectures,
+            "completed": completed,
+            "total": total,
+            "progress_percent": progress_percent,
+            "unlocked_modules": unlocked_modules,
+            "user_review": user_review,
+        }
+    )
 
 @login_required
 def view_student_profile(request, student_id):
@@ -296,7 +353,6 @@ def my_certificates(request):
     certs = Certificate.objects.filter(student=request.user)
     return render(request, 'courses/student/my_certificates.html', {'certificates': certs})
 
-
 @login_required(login_url='/login/')
 def student_upcoming_classes(request):
     user = request.user
@@ -316,6 +372,7 @@ def student_upcoming_classes(request):
     ).select_related('course').order_by('start_time')
 
     events = []
+
     for cls in upcoming_classes:
         events.append({
             "id": cls.id,
@@ -325,10 +382,8 @@ def student_upcoming_classes(request):
             "course_name": cls.course.title,
             "instructor": cls.instructor.get_full_name() or cls.instructor.username,
             "start": f"{cls.date}T{cls.time}",
-            "join_link": cls.meeting_link or "", 
-            "course_id": cls.course.id,
-            "backgroundColor": "#0d6efd",
-            "borderColor": "#0d6efd",
+            "join_link": cls.meeting_link or "",
+            "classNames": ["live-class-event"],   
         })
 
     for ev in upcoming_events:
@@ -336,23 +391,23 @@ def student_upcoming_classes(request):
             "id": ev.id,
             "type": "event",
             "title": ev.title,
+            "topic": ev.title,                       
             "event_title": ev.title,
             "event_description": ev.description,
             "course_name": ev.course.title,
             "start": ev.start_time.isoformat(),
             "end": ev.end_time.isoformat(),
-            "course_id": ev.course.id,
-            "backgroundColor": "#198754",
-            "borderColor": "#198754",
+            "event_link": "",                         
+            "classNames": ["event-class"],            
         })
 
     return render(request, 'courses/student/student_calendar.html', {
-        'events_json': json.dumps(events)  
+        'events_json': json.dumps(events)
     })
-    
+
+
 @login_required
 def account_settings(request):
-    """Student: Account settings page"""
     if request.user.role != "student":
         return redirect("login")
     
@@ -360,23 +415,36 @@ def account_settings(request):
     profile, created = Profile.objects.get_or_create(user=user)
     
     if request.method == 'POST':
-        # Handle form submissions
+
         if 'update_profile' in request.POST:
+            
             user.first_name = request.POST.get('first_name', user.first_name)
             user.last_name = request.POST.get('last_name', user.last_name)
             user.email = request.POST.get('email', user.email)
             user.save()
-            
+
             profile.phone = request.POST.get('phone', profile.phone)
-            profile.bio = request.POST.get('bio', profile.bio)
+            profile.about_me = request.POST.get('about_me', profile.about_me)
+            profile.gender = request.POST.get('gender', profile.gender)
+            profile.qualification = request.POST.get('qualification', profile.qualification)
+
+            dob = request.POST.get('date_of_birth')
+            if dob:
+                profile.date_of_birth = dob
+
+            if 'resume' in request.FILES:
+                profile.resume = request.FILES['resume']
+
             if 'profile_picture' in request.FILES:
                 profile.profile_picture = request.FILES['profile_picture']
+
             profile.save()
-            
+
             messages.success(request, "Profile updated successfully!")
             return redirect('student:account_settings')
-            
+
         elif 'change_password' in request.POST:
+
             old_password = request.POST.get('old_password')
             new_password1 = request.POST.get('new_password1')
             new_password2 = request.POST.get('new_password2')
@@ -386,7 +454,7 @@ def account_settings(request):
                     if len(new_password1) >= 8:
                         user.set_password(new_password1)
                         user.save()
-                        update_session_auth_hash(request, user)  # Important!
+                        update_session_auth_hash(request, user)
                         messages.success(request, "Password changed successfully!")
                     else:
                         messages.error(request, "Password must be at least 8 characters long.")
@@ -394,11 +462,13 @@ def account_settings(request):
                     messages.error(request, "New passwords do not match.")
             else:
                 messages.error(request, "Current password is incorrect.")
+
             return redirect('student:account_settings')
-            
+
         elif 'update_notifications' in request.POST:
             email_notifications = 'email_notifications' in request.POST
             course_updates = 'course_updates' in request.POST
+
             messages.success(request, "Notification preferences updated!")
             return redirect('student:account_settings')
     
@@ -407,6 +477,7 @@ def account_settings(request):
         'profile': profile,
     }
     return render(request, 'courses/student/account_settings.html', context)
+
 
 @login_required
 def student_my_activity(request):
@@ -502,21 +573,31 @@ def student_my_activity(request):
     }
 
     return render(request, "courses/student/my_activity.html", context)
-
+    
 
 @login_required
 def ask_question(request, lecture_id):
     lecture = get_object_or_404(Lecture, id=lecture_id)
+    course = lecture.module.course
 
     if request.method == "POST":
         question_text = request.POST.get("question")
+
         if question_text:
             LectureQuestion.objects.create(
                 lecture=lecture,
                 student=request.user,
                 question=question_text
             )
-        return redirect("student:course_qna", course_id=lecture.module.course.id)
+
+            Notification.objects.create(
+                user=course.instructor,
+                message=f"{request.user.username} asked a question in {course.title}",
+                url=reverse("instructor:course_overview", args=[course.id]) + "?tab=questions"
+            )
+
+        return redirect("student:course_qna", course_id=course.id)
+
     
 @login_required
 def edit_question(request, question_id):
@@ -579,7 +660,6 @@ def upvote_reply(request, reply_id):
 
     return redirect("student:course_qna", course_id=reply.question.lecture.module.course.id)
 
-
 @login_required
 def leave_review(request, course_id):
     course = get_object_or_404(Course, id=course_id)
@@ -600,15 +680,17 @@ def leave_review(request, course_id):
             review_obj.student = request.user
             review_obj.save()
 
+            Notification.objects.create(
+                user=course.instructor,
+                message=f"{request.user.username} left a review for {course.title}",
+                url=reverse("instructor:course_overview", args=[course.id]) + "?tab=reviews"
+            )
             if is_update:
                 messages.success(request, "Your review has been updated.")
             else:
                 messages.success(request, "Thank you! Your review has been submitted.")
 
             return redirect("student:student_course_detail", course_id=course.id)
-
-        else:
-            messages.error(request, "Please fix the errors in the form.")
 
     return redirect("student:course_detail", course_id=course.id)
 
@@ -658,6 +740,7 @@ def mark_notification_read(request, notif_id):
 
 @login_required
 def instructor_dashboard(request):
+    check_and_send_reminders(request.user)
     courses = Course.objects.filter(instructor=request.user)
     unread_count = Notification.objects.filter(
         user=request.user,
@@ -674,10 +757,9 @@ def instructor_dashboard(request):
         "unread_count": unread_count,
     })
 
-
+"""
 @login_required
 def course_edit(request, course_id):
-    """Instructor: edit existing course"""
     course = get_object_or_404(Course, id=course_id, instructor=request.user)
     if request.method == 'POST':
         form = CourseForm(request.POST, request.FILES, instance=course)
@@ -702,7 +784,85 @@ def course_detail(request, course_id):
         'course': course,
         'modules': modules,
         'lectures': lectures,
+        'quizzes': course.quizzes.all(),        
+        'assignments': course.assignments.all(),
+        'live_classes': course.live_classes.all() 
     })
+
+"""
+
+@login_required
+def course_detail(request, course_id):
+    course = get_object_or_404(
+        Course, id=course_id, instructor=request.user
+    )
+
+    ordered_items = []
+    structure = course.structure_json or []
+
+    module_count = 1
+    quiz_count = 1
+    assignment_count = 1
+    live_count = 1
+
+    for item in structure:
+        item_type = item.get("type")
+        module_id = item.get("module_id")
+        display_title = item.get("display_title", "").strip()
+
+        if item_type == "Module" and module_id:
+            module = course.modules.filter(id=module_id).first()
+            if module:
+                title = display_title or f"Module {module_count}"
+                ordered_items.append({
+                    "type": "module",
+                    "obj": module,
+                    "title": title
+                })
+                module_count += 1
+
+        elif item_type == "Quiz":
+            quiz = course.quizzes.first()
+            if quiz:
+                title = display_title or f"Quiz {quiz_count}"
+                ordered_items.append({
+                    "type": "quiz",
+                    "obj": quiz,
+                    "title": title
+                })
+                quiz_count += 1
+
+        elif item_type == "Assignment":
+            assignment = course.assignments.first()
+            if assignment:
+                title = display_title or f"Assignment {assignment_count}"
+                ordered_items.append({
+                    "type": "assignment",
+                    "obj": assignment,
+                    "title": title
+                })
+                assignment_count += 1
+
+        elif item_type == "LiveClass":
+            live = course.live_classes.first()
+            if live:
+                title = display_title or f"Live Class {live_count}"
+                ordered_items.append({
+                    "type": "live",
+                    "obj": live,
+                    "title": title
+                })
+                live_count += 1
+
+    return render(
+        request,
+        "courses/instructor/course_detail.html",
+        {
+            "course": course,
+            "ordered_items": ordered_items,
+        },
+    )
+
 
 @login_required
 def add_lecture(request, course_id):
@@ -718,7 +878,6 @@ def add_lecture(request, course_id):
     else:
         form = LectureForm()
     return render(request, 'courses/instructor/add_lecture.html', {'form': form, 'course': course})
-
 
 
 @login_required
@@ -773,38 +932,71 @@ def course_progress_report(request, course_id):
     })
 
 @login_required
-def add_event(request, course_id):
-    course = get_object_or_404(Course, id=course_id, instructor=request.user)
+def add_event(request):
 
-    if request.method == 'POST':
+    instructor = request.user
+    instructor_courses = Course.objects.filter(instructor=instructor)
+
+    if request.method == "POST":
         form = CourseEventForm(request.POST)
+
+        selected_course_id = request.POST.get("course")  
+
+        if not selected_course_id:
+            messages.error(request, "Please select a course.")
+            return redirect("instructor:add_event")
+
+        course = get_object_or_404(Course, id=selected_course_id, instructor=instructor)
 
         if form.is_valid():
             event = form.save(commit=False)
             event.course = course
-            event.reminder_sent = False
             event.save()
 
             students = Enrollment.objects.filter(course=course).values_list("student_id", flat=True)
-
             for student_id in students:
                 Notification.objects.create(
                     user_id=student_id,
-                    message=f"New Event Added: {event.title} ({course.title})",
+                    message=f"New Event: {event.title} ({course.title})",
                     url=reverse("student:student_upcoming_classes")
+
                 )
 
-            messages.success(request, "Event added successfully.")
+            messages.success(request, "Event created successfully!")
             return redirect("instructor:calendar_view")
 
     else:
         form = CourseEventForm()
 
-    return render(request, 'courses/instructor/add_event.html', {
-        'course': course,
-        'form': form,
+    return render(request, "courses/instructor/add_event.html", {
+        "form": form,
+        "instructor_courses": instructor_courses,
+        "selected_course_id": None,
     })
 
+@login_required
+def edit_event(request, event_id):
+    event = get_object_or_404(CourseEvent, id=event_id, course__instructor=request.user)
+
+    if request.method == "POST":
+        event.title = request.POST.get("title")
+        event.description = request.POST.get("description")
+        event.start_time = request.POST.get("start_time")
+        event.end_time = request.POST.get("end_time")
+        event.save()
+        messages.success(request, "Event updated successfully!")
+        return redirect("instructor:calendar_view")
+
+    return render(request, "courses/instructor/edit_event.html", {
+        "event": event
+    })
+
+@login_required
+def delete_event(request, event_id):
+    event = get_object_or_404(CourseEvent, id=event_id, course__instructor=request.user)
+    event.delete()
+    messages.success(request, "Event deleted.")
+    return redirect("instructor:calendar_view")
 
 @login_required
 def give_feedback(request, course_id):
@@ -961,66 +1153,338 @@ def students_list(request):
 
     return render(request, "courses/instructor/students_list.html", context)
 
+
+
 @login_required
 def add_course(request):
-    if request.method == 'POST':
-        course_form = CourseForm(request.POST, request.FILES)
-        if course_form.is_valid():
-            course = course_form.save(commit=False)
-            course.instructor = request.user
-            course.save()
+    course_id = request.GET.get("course_id")
 
-            module_total = int(request.POST.get('modules-TOTAL_FORMS', 0))
-            for i in range(module_total):
-                title = request.POST.get(f'modules-{i}-title')
-                desc = request.POST.get(f'modules-{i}-description')
-                if title:
-                    module = Module.objects.create(course=course, title=title, description=desc)
+    if course_id:
+        course = get_object_or_404(Course, id=course_id, instructor=request.user)
 
-                    lecture_index = 0
-                    while True:
-                        lecture_title = request.POST.get(f'modules-{i}-lectures-{lecture_index}-title')
-                        lecture_file = request.FILES.get(f'modules-{i}-lectures-{lecture_index}-video')
-                        if not lecture_title:
-                            break
-                        Lecture.objects.create(module=module, title=lecture_title, video=lecture_file)
-                        lecture_index += 1
+        return render(request, "courses/instructor/add_course.html", {
+            "course_id": course.id,
+            "preload": json.dumps(course.structure_json or []),
+            "course_title": course.title,
+            "course_description": course.description,
+            "course_price": course.price,
+            "course_category": course.category,
+        })
 
-            return redirect('instructor:instructor_dashboard')
+    return render(request, "courses/instructor/add_course.html", {
+        "course_id": "null",
+        "preload": json.dumps([]),
+        "course_title": "",
+        "course_description": "",
+        "course_price": "",
+        "course_category": "",
+    })
+
+
+@csrf_exempt
+@login_required
+def create_module(request):
+    if request.method != "POST":
+        return JsonResponse({"error": "POST required"}, status=400)
+
+    data = json.loads(request.body or "{}")
+    course_id = data.get("course_id")
+
+    if not course_id:
+        return JsonResponse({"error": "course_id missing"}, status=400)
+
+    course = get_object_or_404(Course, id=course_id, instructor=request.user)
+
+    module = Module.objects.create(
+        course=course,
+        title="",
+        description=""
+    )
+
+    return JsonResponse({"module_id": module.id})
+
+
+@csrf_exempt
+@login_required
+def save_module(request, module_id):
+
+    module = get_object_or_404(Module, id=module_id, course__instructor=request.user)
+    course = module.course
+
+    title = request.POST.get("module_title", "").strip()
+    description = request.POST.get("description", "")
+
+    if not title:
+        structure = course.structure_json or []
+        index = 1
+
+        for i, item in enumerate(structure):
+            if item.get("module_id") == module_id:
+                index = i + 1
+                break
+
+        title = f"Module {index}"
+
+    module.title = title
+    module.description = description
+    module.save()
+
+    module.lectures.all().delete()
+
+    lecture_count = int(request.POST.get("lecture_count", 0))
+
+    for i in range(lecture_count):
+
+        lec_title = request.POST.get(f"lecture_title_{i}", "")
+        video = request.FILES.get(f"lecture_video_{i}")
+        pdf = request.FILES.get(f"lecture_pdf_{i}")
+
+        Lecture.objects.create(
+            module=module,
+            title=lec_title,
+            video=video,
+            file=pdf,
+            order=i
+        )
+
+    return JsonResponse({"status": "success"})
+
+
+@csrf_exempt
+@login_required
+def save_course(request):
+    if request.method != "POST":
+        return JsonResponse({"error": "POST required"}, status=400)
+
+    data = json.loads(request.body)
+
+    course_id = data.get("course_id")
+    structure = data.get("structure", [])
+
+    if course_id:
+        course = get_object_or_404(Course, id=course_id, instructor=request.user)
+        course.title = data["title"]
+        course.description = data["description"]
+        course.price = data["price"]
+        course.category = data["category"]
+        course.structure_json = structure
+        course.save()
+
+        course.quizzes.all().delete()
+        course.assignments.all().delete()
+        course.live_classes.all().delete()
+
     else:
-        course_form = CourseForm()
-        module_formset = ModuleFormSet()
+        course = Course.objects.create(
+            instructor=request.user,
+            title=data["title"],
+            description=data["description"],
+            price=data["price"],
+            category=data["category"],
+            structure_json=structure,
+        )
 
-    context = {'course_form': course_form, 'module_formset': module_formset}
-    return render(request, 'courses/instructor/add_course.html', context)
+    updated_structure = []
+
+    for index, item in enumerate(structure):
+
+        if item["type"] == "Module":
+            if item.get("module_id"):  
+                module = Module.objects.get(id=item["module_id"])
+                module.order = index
+                module.save()
+            else:
+                module = Module.objects.create(
+                    course=course,
+                    title=item.get("title", "Module"),
+                    order=index
+                )
+                item["module_id"] = module.id
+
+        elif item["type"] == "Quiz":
+            q = Quiz.objects.create(
+                course=course,
+                title=item.get("title", "Quiz"),
+                order=index
+            )
+            item["quiz_id"] = q.id
+
+        elif item["type"] == "Assignment":
+            a = Assignment.objects.create(
+                course=course,
+                title=item.get("title", "Assignment"),
+                order=index
+            )
+            item["assignment_id"] = a.id
+
+        elif item["type"] == "Live Class":
+            lc = LiveClass.objects.create(
+                course=course,
+                instructor=request.user,
+                topic=item.get("title", "Live Class"),
+                order=index
+            )
+            item["liveclass_id"] = lc.id
+
+        updated_structure.append(item)
+
+    course.structure_json = updated_structure
+    course.save()
+
+    return JsonResponse({
+        "status": "success",
+        "course_id": course.id,
+        "structure": updated_structure
+    })
+
+@csrf_exempt
+@login_required
+def delete_module(request, module_id):
+
+    module = get_object_or_404(Module, id=module_id, course__instructor=request.user)
+    course = module.course
+
+    module.delete()  
+
+    updated = []
+    for item in course.structure_json:
+        if item.get("module_id") != module_id:
+            updated.append(item)
+
+    for i, item in enumerate(updated):
+        item["order"] = i
+
+    course.structure_json = updated
+    course.save()
+
+    return JsonResponse({
+        "status": "success",
+        "message": "Module deleted",
+        "structure": updated
+    })
+
+
+@login_required
+def edit_module(request, course_id, module_id):
+    module = get_object_or_404(Module, id=module_id, course_id=course_id)
+
+    lectures = module.lectures.all().order_by("id")
+
+    return render(request, "courses/instructor/edit_module.html", {
+        "module": module,
+        "lectures": lectures,
+        "course_id": course_id
+    })
+
+
+@login_required
+def add_module(request, course_id, module_id):
+
+    course = get_object_or_404(Course, id=course_id, instructor=request.user)
+    module = get_object_or_404(Module, id=module_id, course=course)
+    structure = course.structure_json or []
+    order_index = 1
+
+    for i, item in enumerate(structure):
+        if item.get("module_id") == module_id:
+            order_index = i + 1 
+            break
+
+    return render(request, "courses/instructor/add_module.html", {
+        "course_id": course_id,
+        "module": module,
+        "order_index": order_index,
+        "lectures": module.lectures.all(),
+    })
+
+
+@login_required
+def save_quiz(request, module_id):
+    course = get_object_or_404(course,)
+    Quiz.title = request.POST.get("module_title")
+    Module.description = request.POST.get("module_description")
+    Module.save()
+    return JsonResponse({"status": "saved"})
+
+@login_required
+def add_lecture(request, module_id):
+    module = get_object_or_404(Module, id=module_id)
+
+    title = request.POST.get("title")
+    video = request.FILES.get("video")
+    pdf = request.FILES.get("pdf")
+
+    lec = Lecture.objects.create(
+        module=module,
+        title=title,
+        video=video,
+        file=pdf
+    )
+
+    return JsonResponse({
+        "status": "added",
+        "lecture_id": lec.id,
+        "title": lec.title
+    })
+
+
+@login_required
+def delete_lecture(request, lecture_id):
+    l = get_object_or_404(Lecture, id=lecture_id)
+    l.delete()
+    return JsonResponse({"status": "deleted"})
+
+
+@login_required
+def publish_course(request, course_id):
+
+    course = get_object_or_404(Course, id=course_id, instructor=request.user)
+
+    messages.success(request, f"Course '{course.title}' published successfully!")
+
+    return redirect("instructor:instructor_dashboard")
+
+
+def edit_course(request, course_id):
+    course = get_object_or_404(Course, id=course_id)
+    blocks = CourseBlock.objects.filter(course=course).order_by("order")
+
+    return render(request, "courses/instructor/edit_course.html", {
+        "course": course,
+        "blocks": blocks,
+    })
 
 @login_required(login_url='/login/')
-def schedule_live_class(request, course_id):
-    course = get_object_or_404(Course, pk=course_id)
+def schedule_live_class(request):
+    instructor = request.user
+
+    courses = Course.objects.filter(instructor=instructor)
 
     if request.method == 'POST':
         form = LiveClassForm(request.POST)
 
         if form.is_valid():
             live_class = form.save(commit=False)
-            live_class.instructor = request.user
-            live_class.course = course
-            live_class.meeting_link = request.POST.get('meeting_link')
+            live_class.instructor = instructor
+            live_class.course = form.cleaned_data["course"]  
+            live_class.meeting_link = form.cleaned_data.get("meeting_link")
             live_class.reminder_sent = False  
             live_class.save()
 
             students = Enrollment.objects.filter(
-                course=course
+                course=live_class.course
             ).values_list("student_id", flat=True)
 
             for student_id in students:
                 Notification.objects.create(
                     user_id=student_id,
-                    message=f"New live class scheduled: {live_class.topic} ({course.title})",
+                    message=f"New live class scheduled: {live_class.topic} ({live_class.course.title})",
                     url=reverse("student:student_upcoming_classes")
                 )
 
-            messages.success(request, f"✅ Live class '{live_class.topic}' scheduled successfully!")
+            messages.success(request, 
+                f"✅ Live class '{live_class.topic}' scheduled successfully!"
+            )
 
             return redirect('instructor:calendar_view')
 
@@ -1029,60 +1493,108 @@ def schedule_live_class(request, course_id):
 
     return render(request, 'courses/instructor/schedule_live_class.html', {
         'form': form,
-        'course': course
+        'courses': courses,
     })
+
+@login_required
+def edit_live_class(request, class_id):
+    liveclass = get_object_or_404(LiveClass, id=class_id, instructor=request.user)
+
+    if request.method == "POST":
+        topic = request.POST.get("topic")
+        date = request.POST.get("date")
+        time = request.POST.get("time")
+        meeting_link = request.POST.get("meeting_link")
+
+        liveclass.topic = topic
+        liveclass.date = date
+        liveclass.time = time
+        liveclass.meeting_link = meeting_link
+        liveclass.save()
+        students = Enrollment.objects.filter(
+                course=liveclass.course
+            ).values_list("student_id", flat=True)
+
+        for student_id in students:
+                Notification.objects.create(
+                    user_id=student_id,
+                    message=f"Your live class schedule was modified: {liveclass.topic} ({liveclass.course.title})",
+                    url=reverse("student:student_upcoming_classes")
+                )
+
+
+        messages.success(request, "Class updated successfully.")
+        return redirect("instructor:calendar_view")
+
+    return render(request, "courses/instructor/edit_live_class.html", {
+        "liveclass": liveclass
+    })
+
+@login_required
+def delete_live_class(request, class_id):
+    live_class = get_object_or_404(LiveClass, id=class_id, course__instructor=request.user)
+    live_class.delete()
+    messages.success(request, "Live class deleted.")
+    return redirect("instructor:calendar_view")
+
 
 @login_required(login_url='/login/')
 def my_activity(request):
     live_classes = LiveClass.objects.filter(instructor=request.user).order_by('-date', '-time')
     return render(request, 'courses/instructor/my_activity.html', {'live_classes': live_classes})
 
+
 @login_required
 def calendar_view(request):
     instructor = request.user
-
     live_classes = LiveClass.objects.filter(
         course__instructor=instructor,
         date__gte=date.today()
-    )
+    ).select_related("course")
 
     events_qs = CourseEvent.objects.filter(
         course__instructor=instructor,
         start_time__gte=timezone.now()
-    )
+    ).select_related("course")
 
     calendar_events = []
 
     for cls in live_classes:
         calendar_events.append({
-            "title": cls.topic,
-            "start": f"{cls.date}T{cls.time.strftime('%H:%M:%S')}",
+            "id": cls.id,
             "type": "live_class",
+            "title": cls.topic,
             "topic": cls.topic,
             "course_name": cls.course.title,
+            "start": f"{cls.date}T{cls.time}",
+            "join_link": cls.meeting_link or "",
             "course_id": cls.course.id,
-            "join_url": cls.meeting_link or "",  
+            "backgroundColor": "#0d6efd",
+            "borderColor": "#0d6efd",
         })
-
 
     for ev in events_qs:
         calendar_events.append({
-            "title": ev.title,
-            "start": ev.start_time.isoformat(),
-            "end": ev.end_time.isoformat(),
+            "id": ev.id,
             "type": "event",
-
+            "title": ev.title,
             "event_title": ev.title,
             "event_description": ev.description,
             "course_name": ev.course.title,
+            "start": ev.start_time.isoformat(),
+            "end": ev.end_time.isoformat(),
             "course_id": ev.course.id,
-            "backgroundColor": "#198754", 
+            "event_link": "",  # if needed
+            "backgroundColor": "#198754",
             "borderColor": "#198754",
         })
 
     return render(request, "courses/instructor/instructor_schedule.html", {
-        "events": json.dumps(calendar_events)  
+        "events": json.dumps(calendar_events),
+        "live_classes": live_classes,
+        "events_list": events_qs,
     })
+
 
 @login_required
 def instructor_qna(request, course_id):
@@ -1103,14 +1615,28 @@ def add_reply(request, question_id):
 
     if request.method == "POST":
         reply_text = request.POST.get("reply")
+
         if reply_text:
-            QuestionReply.objects.create(
+            reply_obj = QuestionReply.objects.create(
                 question=question,
                 user=request.user,
                 reply=reply_text
             )
 
-    return redirect("instructor:course_review", course_id=question.lecture.module.course.id)
+            Notification.objects.create(
+                user=question.student, 
+                message=f"Instructor replied to your question in {question.lecture.module.course.title}",
+                url=reverse(
+                    "student:course_qna",
+                    args=[question.lecture.module.course.id]
+                ) + "?highlight=" + str(reply_obj.id)
+            )
+
+    return redirect(
+        "instructor:course_overview",
+        course_id=question.lecture.module.course.id
+    )
+
 
 @login_required
 def edit_reply(request, reply_id):
@@ -1122,7 +1648,7 @@ def edit_reply(request, reply_id):
     if request.method == "POST":
         reply.reply = request.POST.get("reply")
         reply.save()
-        return redirect("instructor:course_review", course_id=reply.question.lecture.module.course.id)
+        return redirect("instructor:course_overview", course_id=reply.question.lecture.module.course.id)
 
     return render(request, "courses/instructor/edit_reply.html", {"reply": reply})
 
@@ -1137,7 +1663,7 @@ def delete_reply(request, reply_id):
     course_id = reply.question.lecture.module.course.id
     reply.delete()
 
-    return redirect("instructor:course_review", course_id=course_id)
+    return redirect("instructor:course_overview", course_id=course_id)
 
 @login_required
 def course_overview(request, course_id):
@@ -1317,26 +1843,31 @@ def instructor_mark_all_read(request):
 
 @login_required
 def instructor_account_settings(request):
-    """Instructor: Account settings page"""
     if request.user.role != "instructor":
         return redirect("login")
 
     user = request.user
-    profile, created = Profile.objects.get_or_create(user=user)
+
+    profile, created = InstructorProfile.objects.get_or_create(user=user)
 
     if request.method == 'POST':
 
-        # -------------------------
-        # UPDATE PROFILE
-        # -------------------------
         if 'update_profile' in request.POST:
             user.first_name = request.POST.get('first_name', user.first_name)
             user.last_name = request.POST.get('last_name', user.last_name)
             user.email = request.POST.get('email', user.email)
             user.save()
 
+            # Instructor-specific fields
             profile.phone = request.POST.get('phone', profile.phone)
-            profile.bio = request.POST.get('bio', profile.bio)
+            profile.about_me = request.POST.get('about_me', profile.about_me)
+            profile.professional_title = request.POST.get('professional_title', profile.professional_title)
+            profile.expertise = request.POST.get('expertise', profile.expertise)
+            exp = request.POST.get('experience')
+            profile.experience = int(exp) if exp.isdigit() else None
+            profile.gender = request.POST.get('gender', profile.gender)
+            profile.date_of_birth = request.POST.get('date_of_birth', profile.date_of_birth)
+            profile.qualification = request.POST.get('qualification', profile.qualification)
 
             if 'profile_picture' in request.FILES:
                 profile.profile_picture = request.FILES['profile_picture']
@@ -1346,40 +1877,36 @@ def instructor_account_settings(request):
             messages.success(request, "Profile updated successfully!")
             return redirect('instructor:account_settings')
 
-        # -------------------------
-        # CHANGE PASSWORD
-        # -------------------------
         elif 'change_password' in request.POST:
             old_password = request.POST.get('old_password')
             new_password1 = request.POST.get('new_password1')
             new_password2 = request.POST.get('new_password2')
 
-            if user.check_password(old_password):
-                if new_password1 == new_password2:
-                    if len(new_password1) >= 8:
-                        user.set_password(new_password1)
-                        user.save()
-                        update_session_auth_hash(request, user)
-                        messages.success(request, "Password changed successfully!")
-                    else:
-                        messages.error(request, "Password must be at least 8 characters long.")
-                else:
-                    messages.error(request, "New passwords do not match.")
-            else:
+            if not user.check_password(old_password):
                 messages.error(request, "Old password is incorrect.")
+                return redirect('instructor:account_settings')
 
+            if new_password1 != new_password2:
+                messages.error(request, "New passwords do not match.")
+                return redirect('instructor:account_settings')
+
+            if len(new_password1) < 8:
+                messages.error(request, "Password must be at least 8 characters long.")
+                return redirect('instructor:account_settings')
+
+            user.set_password(new_password1)
+            user.save()
+            update_session_auth_hash(request, user)
+
+            messages.success(request, "Password changed successfully!")
             return redirect('instructor:account_settings')
 
-        # -------------------------
-        # NOTIFICATION SETTINGS
-        # -------------------------
         elif 'update_notifications' in request.POST:
-            # Save settings here if you add fields in Profile model
             messages.success(request, "Notification preferences updated!")
             return redirect('instructor:account_settings')
 
-    context = {
+    return render(request, 'courses/instructor/instructor_account_settings.html', {
         'user': user,
         'profile': profile,
-    }
-    return render(request, 'courses/instructor/instructor_account_settings.html', context)
+    })
+

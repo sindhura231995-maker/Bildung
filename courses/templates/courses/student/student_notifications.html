@@ -44,15 +44,15 @@
             <ul class="dropdown-menu dropdown-menu-end">
                 <li><a class="dropdown-item" href="{% url 'profile_view' %}">Profile</a></li>
                 <li><a class="dropdown-item" href="{% url 'student:my_courses' %}">My Courses</a></li>
-                <li><a class="dropdown-item" href="{% url 'student:student_upcoming_classes' %}">My Schedules</a></li>
-                <li><a class="dropdown-item" href="{% url 'student:student_my_activity' %}">My Activity</a></li>
+                <li><a class="dropdown-item" href="{% url 'student:student_my_activity' %}">My activity</a></li>
+                <li><a class="dropdown-item" href="{% url 'student:student_upcoming_classes' %}">My_schedules</a></li>
                 <li><a class="dropdown-item" href="{% url 'student:my_certificates' %}">My Certificates</a></li>
                 <li><a class="dropdown-item" href="{% url 'student:student_notifications' %}">Notifications</a></li>
                 <li><a class="dropdown-item" href="#">Payments</a></li>
-                <li><a class="dropdown-item" href="#">Help & Support</a></li>
+                <li><a class="dropdown-item" href="#">Help and Support</a></li>
                 <li><a class="dropdown-item" href="#">Feedback</a></li>
                 <li><a class="dropdown-item" href="{% url 'student:account_settings' %}">Account Settings</a></li>
-                <li><hr></li>
+                <li><hr class="dropdown-divider"></li>
                 <li><a class="dropdown-item text-danger" href="{% url 'logout_view' %}">Logout</a></li>
             </ul>
         </div>
@@ -87,7 +87,7 @@
 
                 <div class="text-end">
                     {% if n.url %}
-                    <a href="{% url 'student:student_upcoming_classes %'}" class="btn btn-sm btn-primary mb-1">Open</a>
+                    <a href="{{ n.url }}" class="btn btn-sm btn-primary mb-1">Open</a>
                     {% endif %}
 
                     {% if not n.is_read %}

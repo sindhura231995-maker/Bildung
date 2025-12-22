@@ -1,5 +1,6 @@
 import datetime
 from datetime import timedelta
+from django.urls import reverse
 from django.utils import timezone
 from courses.models import LiveClass, CourseEvent, Enrollment
 from courses.models import Notification
@@ -27,12 +28,12 @@ def check_and_send_reminders(user):
                     datetime.datetime.combine(cls.date, cls.time)
                 )
 
-                # CHANGED: use reminder_cutoff instead of one_hour_from_now
                 if now < start_dt <= reminder_cutoff:
                     Notification.objects.create(
                         user=user,
                         message=f"Reminder: Live class '{cls.topic}' starts in 30 minutes.",
-                        url="/student/student_upcoming_classes/"
+                        url=reverse("student:student_upcoming_classes")
+
                     )
                     cls.reminder_sent = True
                     cls.save(update_fields=["reminder_sent"])
@@ -45,7 +46,8 @@ def check_and_send_reminders(user):
                 Notification.objects.create(
                     user=user,
                     message=f"Reminder: Event '{event.title}' starts in 30 minutes.",
-                    url="/student/student_upcoming_classes/"
+                    url=reverse("student:student_upcoming_classes")
+
                 )
                 event.reminder_sent = True
                 event.save(update_fields=["reminder_sent"])
@@ -68,7 +70,8 @@ def check_and_send_reminders(user):
                 Notification.objects.create(
                     user=user,
                     message=f"Reminder: Your live class '{cls.topic}' starts in 30 minutes.",
-                    url=f"/instructor/courses/{cls.course.id}/"
+                    url=reverse("instructor:calendar_view")
+
                 )
                 cls.reminder_sent = True
                 cls.save(update_fields=["reminder_sent"])
@@ -84,7 +87,9 @@ def check_and_send_reminders(user):
             Notification.objects.create(
                 user=user,
                 message=f"Reminder: Your event '{event.title}' starts in 30 minutes.",
-                url=f"/instructor/courses/{event.course.id}/"
+                url=reverse("instructor:calendar_view")
+
             )
             event.reminder_sent = True
             event.save(update_fields=["reminder_sent"])
+

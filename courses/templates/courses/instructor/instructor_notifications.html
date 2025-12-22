@@ -24,7 +24,7 @@
 
 <body class="bg-light">
 
-
+<!-- HEADER -->
 <div class="d-flex justify-content-between align-items-center p-3 bg-white shadow-sm">
 
     <a href="{% url 'instructor:instructor_dashboard' %}" class="text-decoration-none text-dark">
@@ -40,21 +40,18 @@
 
         <ul class="dropdown-menu dropdown-menu-end">
             <li><a class="dropdown-item" href="{% url 'instructor_profile_view' %}">Profile</a></li>
-                <li><a class="dropdown-item" href="{% url 'instructor:add_course' %}">Create New Course</a></li>
-                <li><a class="dropdown-item" href="{% url 'instructor:my_activity' %}">My Activity</a></li>
-                <li><a class="dropdown-item" href="{% url 'instructor:students_list' %}">My Students</a></li>
-                <li><a class="dropdown-item" href="{% url 'instructor:calendar_view' %}">My Schedules</a></li>
-                <li><a class="dropdown-item" href="{% url 'instructor:instructor_notifications' %}">Notifications</a></li>
-                <li><a class="dropdown-item" href="#">Earnings & Payments</a></li>
-                <li><a class="dropdown-item" href="#">Help & Support</a></li>
-                <li><a class="dropdown-item" href="{% url 'instructor:account_settings' %}">Account Settings</a></li>
-                <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item text-danger" href="{% url 'logout_view' %}">Logout</a></li>
+            <li><a class="dropdown-item" href="{% url 'instructor:add_course' %}">Create New Course</a></li>
+            <li><a class="dropdown-item" href="{% url 'instructor:students_list' %}">My Students</a></li>
+            <li><a class="dropdown-item" href="{% url 'instructor:calendar_view' %}">My Schedules</a></li>
+            <li><a class="dropdown-item" href="{% url 'instructor:instructor_notifications' %}">Notifications</a></li>
+            <li><a class="dropdown-item" href="{% url 'instructor:account_settings' %}">Account Settings</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item text-danger" href="{% url 'logout_view' %}">Logout</a></li>
         </ul>
     </div>
 </div>
 
-
+<!-- MAIN CONTENT -->
 <div class="container mt-4 mb-5">
 
     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -65,24 +62,25 @@
         </button>
     </div>
 
-
     {% if notifications %}
         {% for n in notifications %}
         <div class="p-3 mb-3 shadow-sm rounded notif-card {% if not n.is_read %}notif-unread{% endif %}">
             <div class="d-flex justify-content-between">
 
+                <!-- MESSAGE + TIME -->
                 <div>
                     <strong>{{ n.message }}</strong><br>
-
                     <small class="text-muted">
                         📅 {{ n.created_at|date:"M d, Y" }}
-                        &nbsp;&nbsp; ⏰ {{ n.created_at|date:"h:i A" }}
+                        &nbsp; ⏰ {{ n.created_at|date:"h:i A" }}
                     </small>
                 </div>
 
                 <div class="text-end">
+
                     {% if n.url %}
-                    <a href="{% url 'instructor:calendar_view' %}" class="btn btn-sm btn-primary mb-1">Open</a>
+                    <!-- MAIN FIX: ALWAYS OPEN n.url EXACTLY -->
+                    <a href="{{ n.url }}" class="btn btn-sm btn-primary mb-1">Open</a>
                     {% endif %}
 
                     {% if not n.is_read %}
@@ -102,7 +100,7 @@
 
 </div>
 
-
+<!-- JS -->
 <script>
 function markRead(id) {
     fetch("{% url 'instructor:mark_notification_read' 0 %}".replace("0", id))

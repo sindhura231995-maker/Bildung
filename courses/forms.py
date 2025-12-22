@@ -84,7 +84,7 @@ class CourseEventForm(forms.ModelForm):
 
     class Meta:
         model = CourseEvent
-        fields = ['title', 'description', 'start_time', 'end_time']
+        fields = ['course', 'title', 'description', 'start_time', 'end_time']
 
 
 class LiveClassForm(forms.ModelForm):

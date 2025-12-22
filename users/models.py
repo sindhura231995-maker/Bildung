@@ -39,7 +39,7 @@ class Profile(models.Model):
         settings.AUTH_USER_MODEL, 
         on_delete=models.CASCADE
     )
-    
+    profile_picture = models.ImageField(upload_to="student_profiles/", blank=True, null=True)
     about_me = models.TextField(
         blank=True, 
         null=True
@@ -90,14 +90,12 @@ class InstructorProfile(models.Model):
         on_delete=models.CASCADE,
         related_name="instructor_profile"
     )
-
+    profile_picture = models.ImageField(upload_to="instructor_profiles/", blank=True, null=True)
     professional_title = models.CharField(max_length=200, blank=True, null=True)
     expertise = models.CharField(max_length=200, blank=True, null=True)
     experience = models.PositiveIntegerField(blank=True, null=True)
 
     about_me = models.TextField(blank=True, null=True)
-    linkedin = models.URLField(blank=True, null=True)
-    website = models.URLField(blank=True, null=True)
     phone = models.CharField(max_length=15, blank=True, null=True)
     gender = models.CharField(
         max_length=10,
@@ -106,8 +104,6 @@ class InstructorProfile(models.Model):
     )
     date_of_birth = models.DateField(blank=True, null=True)
     qualification = models.CharField(max_length=120, blank=True, null=True)
-
-    resume = models.FileField(upload_to="instructor_resumes/", blank=True, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
 

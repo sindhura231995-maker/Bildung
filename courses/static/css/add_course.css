@@ -1,0 +1,155 @@
+body {
+    background: #d9e2ff;
+    font-family: Poppins, sans-serif;
+}
+
+.paper {
+    width: 90%;
+    max-width: 900px;
+    background: white;
+    margin: 40px auto;
+    padding: 25px 35px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+}
+
+.title {
+    text-align: center;
+    color: #3743a4;
+    margin-bottom: 20px;
+}
+
+.label {
+    font-weight: 600;
+}
+
+.input-box {
+    width: 100%;
+    padding: 10px;
+    border-radius: 10px;
+    border: 2px solid #cfd6f2;
+    margin-bottom: 12px;
+}
+
+.divider {
+    margin: 25px 0;
+}
+
+.top-row {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+
+.plus-box {
+    width: 120px;
+    height: 120px;
+    border: 2px dashed #a6b4e8;
+    background: #eef2ff;
+    border-radius: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+}
+
+.plus {
+    font-size: 35px;
+    color: #4c57c9;
+}
+
+.filled {
+    border-style: solid;
+    background: #fff;
+}
+
+.module-filled {
+    background: #e3f7ff !important;
+}
+.quiz-filled {
+    background: #fff5d9 !important;
+}
+.assignment-filled {
+    background: #e8ffe3 !important;
+}
+.liveclass-filled {
+    background: #ffe3f0 !important;
+}
+
+.box-label {
+    font-weight: 600;
+    color: #333;
+    text-align: center;
+}
+
+.drag-row {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-bottom: 15px;
+}
+
+.draggable-btn {
+    padding: 12px 18px;
+    color: white;
+    border-radius: 8px;
+    cursor: grab;
+    font-weight: 500;
+}
+
+.module-btn { background: #397ee9; }
+.quiz-btn { background: #f5a623; }
+.assignment-btn { background: #44c767; }
+.liveclass-btn { background: #d43f8d; }
+
+.actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.save-main, .publish-main {
+    padding: 12px 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    border: none;
+    font-weight: 600;
+}
+
+.save-main {
+    background: #5e60ce;
+    color: white;
+}
+
+.publish-main {
+    background: #43aa8b;
+    color: white;
+}
+
+.note {
+    text-align: center;
+    color: #555;
+    margin-top: 10px;
+}
+
+.delete-module-btn {
+    background: #ff4d4d;
+    color: white;
+    border: none;
+    padding: 4px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-left: 6px;
+}
+
+.delete-module-btn:hover {
+    background: #d90000;
+}
+
+.card-actions {
+    margin-top: 10px;
+    display: flex;
+    gap: 6px;
+}
+

@@ -1,0 +1,215 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Module </title>
+
+    <link rel="stylesheet" href="{% static 'css/add_course.css' %}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <script>
+        const BASE_URL = "/instructor";
+        const COURSE_ID = "{{ course_id }}";
+        const MODULE_ID = "{{ module.id }}";
+    </script>
+
+<style>
+
+/* ========================= TOP BAR ========================= */
+.topbar {
+    background: white;
+    padding: 12px 25px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.topbar-title {
+    font-size: 26px;
+    font-weight: 700;
+    text-decoration: none;
+    color: #222;
+}
+
+/* ========================= LECTURE CARD ========================= */
+.lecture-card {
+    background: #ffffff;
+    padding: 20px;
+    margin-bottom: 18px;
+    border-radius: 15px;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+    border-left: 5px solid #5167ff;
+    transition: 0.2s ease;
+}
+.lecture-card:hover {
+    transform: scale(1.01);
+    box-shadow: 0 5px 18px rgba(0,0,0,0.12);
+}
+
+.lecture-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.lecture-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #253b8a;
+}
+
+.delete-lecture-btn {
+    background: #ff4d4d;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 14px;
+}
+.delete-lecture-btn:hover { background: #d93636; }
+
+.lecture-body label {
+    font-weight: 600;
+    margin-top: 10px;
+    margin-bottom: 5px;
+}
+
+.lecture-body input[type="text"],
+.lecture-body input[type="file"] {
+    width: 100%;
+    padding: 10px;
+    border: 2px solid #c9d1f0;
+    border-radius: 10px;
+    margin-bottom: 12px;
+    font-size: 15px;
+    transition: 0.2s;
+}
+
+.lecture-body input[type="text"]:focus {
+    border-color: #5167ff;
+    box-shadow: 0 0 4px rgba(81,103,255,0.35);
+}
+
+/* Add Lecture Button */
+.add-btn {
+    margin-top: 15px;
+    width: 100%;
+    padding: 12px;
+    border-radius: 12px;
+    font-size: 16px;
+    background: #5167ff;
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: 0.2s;
+    margin-bottom: 30px;
+}
+.add-btn:hover { background: #3b4fd8; }
+
+</style>
+</head>
+
+
+<body class="bg-light">
+
+<div class="topbar">
+
+    <a href="{% url 'instructor:instructor_dashboard' %}" class="topbar-title">
+        Bildung
+    </a>
+
+    <div class="dropdown">
+        <button class="btn rounded-circle shadow"
+                style="background:#666;color:white;width:45px;height:45px;"
+                data-bs-toggle="dropdown">
+            {{ request.user.username|first|upper }}
+        </button>
+
+        <ul class="dropdown-menu dropdown-menu-end">
+            <li><a class="dropdown-item" href="{% url 'instructor_profile_view' %}">Profile</a></li>
+                <li><a class="dropdown-item" href="{% url 'instructor:add_course' %}">Create New Course</a></li>
+                <li><a class="dropdown-item" href="{% url 'instructor:students_list' %}">My Students</a></li>
+                <li><a class="dropdown-item" href="{% url 'instructor:calendar_view' %}">My Schedules</a></li>
+                <li><a class="dropdown-item" href="{% url 'instructor:instructor_notifications' %}">Notifications</a></li>
+                <li><a class="dropdown-item" href="#">Earnings & Payments</a></li>
+                <li><a class="dropdown-item" href="#">Help & Support</a></li>
+                <li><a class="dropdown-item" href="{% url 'instructor:account_settings' %}">Account Settings</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item text-danger" href="{% url 'logout_view' %}">Logout</a></li>
+        </ul>
+    </div>
+</div>
+
+<div class="paper">
+
+    <h1 class="title">EDIT MODULE</h1>
+
+    <label class="label">Module Title</label>
+    <input id="moduleTitle" class="input-box" value="{{ module.title }}">
+
+    <label class="label">Module Description</label>
+    <textarea id="moduleDescription" class="input-box" style="height:80px;">{{ module.description }}</textarea>
+
+    <hr class="divider">
+
+    <h2 class="title">LECTURES</h2>
+
+    <div id="lectureList">
+
+        {% for lec in lectures %}
+        <div class="lecture-card" data-existing="1">
+
+            <div class="lecture-header">
+                <span class="lecture-title">{{ lec.title }}</span>
+                <button class="delete-lecture-btn" onclick="deleteLecture({{ forloop.counter0 }})">✖</button>
+            </div>
+
+            <div class="lecture-body">
+
+                <label>Lecture Title</label>
+                <input type="text" class="lecture-title-input" value="{{ lec.title }}">
+
+                <label>Upload Video</label>
+                <input type="file" accept="video/*" class="lecture-video-input">
+                {% if lec.video %}
+                    <a href="{{ lec.video.url }}" target="_blank" style="font-size:13px;">Current Video</a><br>
+                {% endif %}
+
+                <label>Upload PDF</label>
+                <input type="file" accept="application/pdf" class="lecture-file-input">
+                {% if lec.file %}
+                    <a href="{{ lec.file.url }}" target="_blank" style="font-size:13px;">Current PDF</a>
+                {% endif %}
+
+            </div>
+
+        </div>
+        {% endfor %}
+
+    </div>
+
+    <button class="add-btn" id="addLecture">+ Add Lecture</button>
+
+    <div class="actions">
+        <button class="save-main" onclick="saveModule()">Save Module</button>
+        <button class="publish-main" onclick="goBack()">Back to Course</button>
+    </div>
+
+</div>
+
+
+<script>
+function goBack() {
+    window.location.href = `${BASE_URL}/courses/${COURSE_ID}/edit/`;
+}
+</script>
+
+<script src="{% static 'js/edit_module.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

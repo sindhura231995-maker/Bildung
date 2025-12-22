@@ -1,71 +1,73 @@
 {% extends "base.html" %}
-{% load static %}
 
 {% block content %}
 <div class="container py-5">
 
-    <h2>Add Event for {{ course.title }}</h2>
+    <div class="card shadow-sm p-4 border-0 rounded-4">
 
-    <form method="post" class="mt-4">
-        {% csrf_token %}
+        <h4 class="text-primary fw-bold mb-4">📌 Add New Event</h4>
 
-        <div class="mb-3">
-            <label class="form-label">Title</label>
-            <input 
-                type="text"
-                name="{{ form.title.name }}"
-                value="{{ form.title.value|default_if_none:'' }}"
-                class="form-control"
-                required
-            >
-            {% if form.title.errors %}
-                <div class="text-danger small">{{ form.title.errors.0 }}</div>
-            {% endif %}
-        </div>
+        <form method="post">
+            {% csrf_token %}
 
-        <div class="mb-3">
-            <label class="form-label">Description</label>
-            <textarea 
-                name="{{ form.description.name }}"
-                class="form-control"
-            >{{ form.description.value|default_if_none:'' }}</textarea>
+            <!-- COURSE DROPDOWN -->
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Select Course</label>
+                <select name="course" class="form-select" required>
+                    <option value="">-- Choose Course --</option>
 
-            {% if form.description.errors %}
-                <div class="text-danger small">{{ form.description.errors.0 }}</div>
-            {% endif %}
-        </div>
+                    {% for c in instructor_courses %}
+                        <option value="{{ c.id }}"
+                            {% if selected_course_id == c.id %}selected{% endif %}>
+                            {{ c.title }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
 
-        <div class="mb-3">
-            <label class="form-label">Start Date & Time</label>
-            <input 
-                type="datetime-local"
-                name="{{ form.start_time.name }}"
-                value="{{ form.start_time.value|default_if_none:'' }}"
-                class="form-control"
-                required
-            >
-            {% if form.start_time.errors %}
-                <div class="text-danger small">{{ form.start_time.errors.0 }}</div>
-            {% endif %}
-        </div>
+            <!-- EVENT TITLE -->
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Event Title</label>
+                <input type="text"
+                       name="{{ form.title.name }}"
+                       value="{{ form.title.value|default:'' }}"
+                       class="form-control"
+                       required>
+            </div>
 
-        <div class="mb-3">
-            <label class="form-label">End Date & Time</label>
-            <input 
-                type="datetime-local"
-                name="{{ form.end_time.name }}"
-                value="{{ form.end_time.value|default_if_none:'' }}"
-                class="form-control"
-                required
-            >
-            {% if form.end_time.errors %}
-                <div class="text-danger small">{{ form.end_time.errors.0 }}</div>
-            {% endif %}
-        </div>
+            <!-- DESCRIPTION -->
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Description</label>
+                <textarea name="{{ form.description.name }}"
+                          class="form-control"
+                          rows="3">{{ form.description.value|default:'' }}</textarea>
+            </div>
 
+            <!-- START DATETIME -->
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Start Date & Time</label>
+                <input type="datetime-local"
+                       name="{{ form.start_time.name }}"
+                       value="{{ form.start_time.value|default:'' }}"
+                       class="form-control"
+                       required>
+            </div>
 
-        <button class="btn btn-primary">Create Event</button>
-    </form>
+            <!-- END DATETIME -->
+            <div class="mb-3">
+                <label class="form-label fw-semibold">End Date & Time</label>
+                <input type="datetime-local"
+                       name="{{ form.end_time.name }}"
+                       value="{{ form.end_time.value|default:'' }}"
+                       class="form-control"
+                       required>
+            </div>
+
+            <button type="submit" class="btn btn-success">💡 Create Event</button>
+            <a href="{% url 'instructor:instructor_dashboard' %}" class="btn btn-secondary">Cancel</a>
+
+        </form>
+
+    </div>
 </div>
 {% endblock %}
-
